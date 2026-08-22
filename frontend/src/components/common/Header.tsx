@@ -42,7 +42,9 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           {loading ? (
-            <span className="px-2 text-sm text-stone-400">…</span>
+            <NavLink to="/login" className="btn-b px-3 text-xs sm:px-5 sm:text-sm">
+              Log in
+            </NavLink>
           ) : isAuthenticated ? (
             <button type="button" onClick={() => signOut()} className="btn-c">
               Sign out

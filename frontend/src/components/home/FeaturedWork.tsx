@@ -2,13 +2,40 @@ import { Link } from 'react-router-dom'
 import { formatPrice } from '../../lib/utils'
 import type { Artwork } from '../../types'
 
-const PREVIEW_COUNT = 4
+export function HeroArtGrid({ artwork }: { artwork: Artwork[] }) {
+  const pieces = artwork.filter((item) => item.image_url).slice(0, 4)
+
+  if (pieces.length === 0) {
+    return (
+      <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-stone-100 text-stone-400">
+        Artwork coming soon
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      to="/artists/dani"
+      className="grid aspect-[4/3] grid-cols-2 grid-rows-2 gap-2 overflow-hidden rounded-3xl"
+      aria-label="Dani's artwork"
+    >
+      {pieces.map((item) => (
+        <img
+          key={item.id}
+          src={item.image_url}
+          alt={item.title}
+          className="h-full w-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      ))}
+    </Link>
+  )
+}
 
 export function FeaturedWork({ artwork }: { artwork: Artwork[] }) {
   const pieces = artwork.filter((item) => item.image_url)
-  const preview = pieces.slice(0, PREVIEW_COUNT)
 
-  if (preview.length === 0) return null
+  if (pieces.length === 0) return null
 
   return (
     <section className="border-t border-stone-200 bg-white">
@@ -22,16 +49,16 @@ export function FeaturedWork({ artwork }: { artwork: Artwork[] }) {
               Dani's artwork
             </h2>
           </div>
-          <Link to="/artists/dani#registry" className="btn-c text-sm">
-            View registry →
+          <Link to="/artists/dani" className="btn-c">
+            See the registry →
           </Link>
         </div>
 
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {preview.map((item) => (
+          {pieces.map((item) => (
             <li key={item.id}>
               <Link
-                to="/artists/dani#gallery"
+                to="/artists/dani"
                 className="group block overflow-hidden rounded-3xl bg-stone-100"
               >
                 <img
@@ -51,21 +78,6 @@ export function FeaturedWork({ artwork }: { artwork: Artwork[] }) {
             </li>
           ))}
         </ul>
-
-        {pieces.length > PREVIEW_COUNT && (
-          <div className="mt-8 text-center">
-            <Link to="/artists/dani#gallery" className="btn-b">
-              View more artwork →
-            </Link>
-          </div>
-        )}
-        {pieces.length <= PREVIEW_COUNT && pieces.length > 0 && (
-          <div className="mt-8 text-center">
-            <Link to="/artists/dani#gallery" className="btn-b">
-              View full gallery →
-            </Link>
-          </div>
-        )}
       </div>
     </section>
   )
