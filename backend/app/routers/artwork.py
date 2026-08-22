@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from typing import List
+from typing import List, Optional
 from ..models.schemas import Artwork, ArtworkCreate, ArtworkUpdate
 from ..services.supabase import supabase
 
@@ -7,8 +7,13 @@ router = APIRouter(prefix="/artwork", tags=["artwork"])
 
 
 @router.get("/", response_model=List[Artwork])
-async def get_all_artwork():
-    response = supabase.table("artwork").select("*").execute()
+async def get_all_artwork(user_id: Optional[str] = None, status: Optional[str] = None):
+    query = supabase.table("artwork").select("*")
+    if user_id:
+        query = query.eq("user_id", user_id)
+    if status:
+        query = query.eq("status", status)
+    response = query.execute()
     return response.data
 
 

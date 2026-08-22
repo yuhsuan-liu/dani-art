@@ -1,19 +1,28 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 from datetime import datetime
 
 
-class ArtistBase(BaseModel):
+# User schemas
+class UserBase(BaseModel):
     name: str
     bio: Optional[str] = None
     profile_pic_url: Optional[str] = None
+    role: Literal['admin', 'artist', 'customer'] = 'customer'
 
 
-class ArtistCreate(ArtistBase):
+class UserCreate(UserBase):
     email: str
 
 
-class Artist(ArtistBase):
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    bio: Optional[str] = None
+    profile_pic_url: Optional[str] = None
+    role: Optional[Literal['admin', 'artist', 'customer']] = None
+
+
+class User(UserBase):
     id: str
     email: str
     created_at: datetime
@@ -22,6 +31,7 @@ class Artist(ArtistBase):
         from_attributes = True
 
 
+# Room schemas
 class RoomBase(BaseModel):
     name: str
     order: int = 0
@@ -31,18 +41,27 @@ class RoomBase(BaseModel):
 
 
 class RoomCreate(RoomBase):
-    artist_id: str
+    user_id: str
+
+
+class RoomUpdate(BaseModel):
+    name: Optional[str] = None
+    order: Optional[int] = None
+    background_url: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
 
 
 class Room(RoomBase):
     id: str
-    artist_id: str
+    user_id: str
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
+# Artwork schemas
 class ArtworkBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -54,7 +73,7 @@ class ArtworkBase(BaseModel):
 
 
 class ArtworkCreate(ArtworkBase):
-    artist_id: str
+    user_id: str
 
 
 class ArtworkUpdate(BaseModel):
@@ -69,7 +88,7 @@ class ArtworkUpdate(BaseModel):
 
 class Artwork(ArtworkBase):
     id: str
-    artist_id: str
+    user_id: str
     created_at: datetime
     updated_at: datetime
 
@@ -77,6 +96,7 @@ class Artwork(ArtworkBase):
         from_attributes = True
 
 
+# Furniture schemas
 class FurnitureBase(BaseModel):
     name: str
     image_url: str
@@ -121,6 +141,7 @@ class Furniture(FurnitureBase):
         from_attributes = True
 
 
+# Order schemas
 class ShippingAddress(BaseModel):
     street: str
     city: str
@@ -143,6 +164,7 @@ class OrderBase(BaseModel):
 class OrderCreate(OrderBase):
     artwork_id: str
     furniture_id: str
+    customer_id: Optional[str] = None
 
 
 class OrderUpdate(BaseModel):
@@ -154,6 +176,7 @@ class Order(OrderBase):
     id: str
     artwork_id: str
     furniture_id: str
+    customer_id: Optional[str] = None
     status: str
     payment_reference: Optional[str] = None
     created_at: datetime

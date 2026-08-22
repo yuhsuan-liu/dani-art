@@ -5,7 +5,7 @@ import os
 
 load_dotenv()
 
-from app.routers import artists, artwork, rooms, furniture, orders
+from app.routers import users, artwork, rooms, furniture, orders
 
 app = FastAPI(
     title="Dani's Art Registry API",
@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(artists.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
 app.include_router(artwork.router, prefix="/api")
 app.include_router(rooms.router, prefix="/api")
 app.include_router(furniture.router, prefix="/api")
