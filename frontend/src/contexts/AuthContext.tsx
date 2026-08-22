@@ -132,6 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!supabaseUser,
   }
 
+  // Debug: log auth state changes
+  console.log('[auth] State:', { 
+    isAuthenticated: !!supabaseUser, 
+    userRole: user?.role,
+    isArtist: value.isArtist,
+    loading 
+  })
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
