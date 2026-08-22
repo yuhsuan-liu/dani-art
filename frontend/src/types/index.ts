@@ -22,6 +22,8 @@ export interface Room {
   width: number
   height: number
   created_at: string
+  /** Frontend-only flag for seed data. Never write to production DB. */
+  is_demo?: boolean
 }
 
 export interface Furniture {
@@ -41,8 +43,8 @@ export interface Furniture {
   status: 'available' | 'reserved' | 'purchased'
   created_at: string
   updated_at: string
-  // Joined data
   artwork?: Artwork
+  is_demo?: boolean
 }
 
 export interface Artwork {
@@ -57,6 +59,7 @@ export interface Artwork {
   status: 'available' | 'reserved' | 'sold'
   created_at: string
   updated_at: string
+  is_demo?: boolean
 }
 
 export interface Order {
@@ -82,6 +85,7 @@ export interface Order {
   payment_reference?: string
   created_at: string
   updated_at: string
+  is_demo?: boolean
 }
 
 export interface BlogPost {
@@ -95,4 +99,33 @@ export interface BlogPost {
   published_at?: string
   created_at: string
   updated_at: string
+}
+
+/** Dated note on the public blog, e.g. "5/6 artfare at..." */
+export interface CalendarEvent {
+  id: string
+  user_id: string
+  date: string
+  title: string
+  created_at: string
+  updated_at: string
+  is_demo?: boolean
+}
+
+export type MediaKind = 'image' | 'video'
+
+export interface MediaItem {
+  url: string
+  kind: MediaKind
+}
+
+/** Short update with optional photos/video — tweet-like, not a long post. */
+export interface UpdatePost {
+  id: string
+  user_id: string
+  text: string
+  media: MediaItem[]
+  created_at: string
+  updated_at: string
+  is_demo?: boolean
 }

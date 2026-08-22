@@ -21,3 +21,9 @@ export function formatDate(iso: string): string {
 export function newId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`
 }
+
+export function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value,
+  )
+}
