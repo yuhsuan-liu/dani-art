@@ -1,7 +1,7 @@
 # Dani's Art Registry - Product Requirements Document
 
 > **Project Type:** Gift project for artist friend Dani  
-> **Last Updated:** August 22, 2026  
+> **Last Updated:** August 22, 2026, 1:05 AM EDT  
 > **Status:** Development Phase
 
 ---
@@ -872,36 +872,36 @@ Since payments are external and not automatically verified:
 - [x] Public vs authenticated route handling — *Aug 22, 2026 12:22 AM*
 
 #### 1.4 Basic Floor Map (View Only)
-- [x] Create room canvas component
-- [x] Render furniture items from database
-- [x] Implement furniture hover states
-- [x] Implement furniture click → art modal
-- [x] Art detail modal display
+- [x] Create room canvas component — *Aug 22, 2026 12:00 AM*
+- [x] Render furniture items from database — *Aug 22, 2026 12:00 AM*
+- [x] Implement furniture hover states — *Aug 22, 2026 12:00 AM*
+- [x] Implement furniture click → art modal — *Aug 22, 2026 12:00 AM*
+- [x] Art detail modal display — *Aug 22, 2026 12:00 AM*
 
 #### 1.5 Basic Art Management
-- [x] Art upload form (single)
-- [x] Art list table view
-- [x] Edit art details
-- [x] Delete art
+- [x] Art upload form (single) — *Aug 22, 2026 12:00 AM*
+- [x] Art list table view — *Aug 22, 2026 12:00 AM*
+- [x] Edit art details — *Aug 22, 2026 12:00 AM*
+- [x] Delete art — *Aug 22, 2026 12:00 AM*
 
 ### Phase 2: Interactive Features
 
 > **Goal:** Full floor map editing, ordering flow
 
 #### 2.1 Floor Map Edit Mode
-- [ ] Toggle edit mode
-- [ ] Drag-and-drop furniture positioning
-- [ ] Add furniture (upload drawing)
-- [ ] Link furniture to artwork
-- [ ] Delete furniture
-- [ ] Auto-save changes
+- [x] Toggle edit mode — *Aug 22, 2026 1:05 AM*
+- [x] Drag-and-drop furniture positioning — *Aug 22, 2026 1:05 AM*
+- [x] Add furniture (upload drawing) — *Aug 22, 2026 1:05 AM*
+- [x] Link furniture to artwork — *Aug 22, 2026 1:05 AM*
+- [x] Delete furniture — *Aug 22, 2026 1:05 AM*
+- [x] Auto-save changes — *Aug 22, 2026 1:05 AM*
 
 #### 2.2 Multiple Rooms
-- [ ] Room tabs UI
-- [ ] Add new room
-- [ ] Rename room
-- [ ] Delete room
-- [ ] Room switching
+- [x] Room tabs UI — *Aug 22, 2026 1:05 AM*
+- [x] Add new room — *Aug 22, 2026 1:05 AM*
+- [x] Rename room — *Aug 22, 2026 1:05 AM*
+- [x] Delete room — *Aug 22, 2026 1:05 AM*
+- [x] Room switching — *Aug 22, 2026 1:05 AM*
 
 #### 2.3 Customer Order Flow
 - [ ] Order form UI
@@ -912,9 +912,9 @@ Since payments are external and not automatically verified:
 - [ ] Order creates in database
 
 #### 2.4 Dashboard
-- [ ] Sales summary widgets
-- [ ] Recent orders list
-- [ ] Quick action links
+- [x] Sales summary widgets — *Aug 22, 2026 1:05 AM*
+- [x] Recent orders list — *Aug 22, 2026 1:05 AM*
+- [x] Quick action links — *Aug 22, 2026 1:05 AM*
 
 ### Phase 3: Polish & Additional Features
 

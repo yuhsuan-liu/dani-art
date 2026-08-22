@@ -7,7 +7,6 @@ import { Blog } from './pages/Blog'
 import { Dashboard } from './pages/Dashboard'
 import { Home } from './pages/Home'
 import { Login } from './pages/Login'
-import { ProtectedRoute } from './components/common/ProtectedRoute'
 
 /** Vite BASE_URL is `/` in dev and `/dani_art/` in production builds. */
 const basename =
@@ -25,11 +24,9 @@ export default function App() {
             <Route path="/artists/:artistId" element={<Artist />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/login" element={<Login />} />
-            {/* Public for now so 1.5 can be verified without OAuth */}
+            {/* Public for local verify until OAuth is required again */}
             <Route path="/manage/art" element={<ArtManagement />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Route>
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
