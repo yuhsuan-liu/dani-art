@@ -1,14 +1,20 @@
-import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArtDetailModal } from '../components/art/ArtDetailModal'
+import { ArtGridView } from '../components/art/ArtGridView'
 import { ArtListView } from '../components/art/ArtListView'
+import { DemoDataBanner } from '../components/common/DemoBadge'
+import { ViewSwitch } from '../components/common/ViewSwitch'
+import { useAuth } from '../contexts/AuthContext'
 import { EditModeToolbar } from '../components/floor-map/EditModeToolbar'
 import { FurnitureEditPanel } from '../components/floor-map/FurnitureEditPanel'
 import { RoomCanvas } from '../components/floor-map/RoomCanvas'
 import { RoomNameDialog, RoomTabs } from '../components/floor-map/RoomTabs'
+import { isDemoRecord } from '../data/mockRegistry'
 import { getArtist } from '../lib/artists'
 import { getArtworkByArtist } from '../lib/artwork'
+import { clearAllDemoData } from '../lib/demo'
 import {
   createFurniture,
   createRoom,
@@ -23,6 +29,8 @@ import {
 } from '../lib/rooms'
 import type { Artist as ArtistType, Artwork, Furniture, Room } from '../types'
 
+type CatalogView = 'gallery' | 'plan'
+type GalleryLayout = 'grid' | 'list'
 type RoomDialog =
   | { type: 'add' }
   | { type: 'rename'; room: Room }
@@ -30,12 +38,14 @@ type RoomDialog =
 
 export function Artist() {
   const { artistId = '' } = useParams()
+  const { isArtist } = useAuth()
   const [artist, setArtist] = useState<ArtistType | undefined>()
   const [rooms, setRooms] = useState<Room[]>([])
   const [furniture, setFurniture] = useState<Furniture[]>([])
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string>()
-  const [view, setView] = useState<'map' | 'list'>('map')
+  const [catalog, setCatalog] = useState<CatalogView>('gallery')
+  const [galleryLayout, setGalleryLayout] = useState<GalleryLayout>('grid')
   const [editMode, setEditMode] = useState(false)
   const [selectedFurniture, setSelectedFurniture] = useState<Furniture>()
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork>()
@@ -170,7 +180,7 @@ export function Artist() {
   }
 
   if (loading) {
-    return <p className="px-4 py-16 text-center text-stone-500">Loading floor map…</p>
+    return <p className="px-4 py-16 text-center text-stone-500">Loading…</p>
   }
   if (error || !artist) {
     return (
@@ -181,58 +191,88 @@ export function Artist() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-900">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+      <div className="flex items-center justify-between gap-3">
+        <Link to="/" className="btn-c">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <h1 className="font-serif text-xl text-stone-900 sm:text-2xl">
-          {artist.name}'s Art Registry
-        </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/manage/art"
-            className="inline-flex items-center gap-2 rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
-          >
-            Manage art
-          </Link>
-          <button
-            type="button"
-            onClick={() => setView((current) => (current === 'map' ? 'list' : 'map'))}
-            className="inline-flex items-center gap-2 rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-700"
-          >
-            {view === 'map' ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-            {view === 'map' ? 'List view' : 'Floor map'}
-          </button>
-        </div>
+        <Link to="/manage/art" className="btn-c hidden sm:inline-flex">
+          Manage art
+        </Link>
       </div>
 
-      <section className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 font-serif text-2xl text-amber-800">
+      <section className="mt-6 flex items-center gap-4">
+        <div className="avatar-lg flex items-center justify-center bg-amber-100 font-serif text-2xl text-amber-800">
           {artist.name.charAt(0)}
         </div>
         <div>
-          <h2 className="font-serif text-2xl text-stone-900">{artist.name}</h2>
+          <h1 className="font-serif text-2xl text-stone-900 sm:text-3xl">{artist.name}</h1>
           <p className="mt-1 max-w-2xl text-sm text-stone-600">{artist.bio}</p>
         </div>
       </section>
 
-      {view === 'map' && (
-        <section className="mt-8 space-y-4">
-          <EditModeToolbar
-            editMode={editMode}
-            saveStatus={saveStatus}
-            onToggle={() => {
-              setEditMode((value) => !value)
-              setEditingFurniture(null)
-              setAddingFurniture(false)
-            }}
-            onAddFurniture={() => {
-              setAddingFurniture(true)
-              setEditingFurniture(null)
-            }}
+      <div className="mt-6 space-y-3">
+        <ViewSwitch
+          label="Catalog view"
+          value={catalog}
+          onChange={(next) => {
+            setCatalog(next)
+            setEditMode(false)
+          }}
+          options={[
+            { id: 'gallery', label: 'Gallery' },
+            { id: 'plan', label: 'Floor plan' },
+          ]}
+        />
+        {catalog === 'gallery' && (
+          <ViewSwitch
+            label="Gallery layout"
+            value={galleryLayout}
+            onChange={setGalleryLayout}
+            compact
+            options={[
+              { id: 'grid', label: 'Grid' },
+              { id: 'list', label: 'List' },
+            ]}
           />
+        )}
+      </div>
+
+      <div className="mt-6">
+        <DemoDataBanner
+          hasDemo={
+            rooms.some(isDemoRecord) ||
+            furniture.some(isDemoRecord) ||
+            artwork.some(isDemoRecord)
+          }
+          onClearDemo={async () => {
+            if (!window.confirm('Remove all demo rooms, furniture, artwork, and orders? Your real uploads stay.')) {
+              return
+            }
+            await clearAllDemoData()
+            await refresh()
+          }}
+        />
+      </div>
+
+      {catalog === 'plan' && (
+        <section className="mt-6 space-y-4">
+          {isArtist && (
+            <EditModeToolbar
+              editMode={editMode}
+              saveStatus={saveStatus}
+              onToggle={() => {
+                setEditMode((value) => !value)
+                setEditingFurniture(null)
+                setAddingFurniture(false)
+              }}
+              onAddFurniture={() => {
+                setAddingFurniture(true)
+                setEditingFurniture(null)
+              }}
+            />
+          )}
 
           {rooms.length > 0 && activeRoom ? (
             <>
@@ -268,7 +308,7 @@ export function Artist() {
                 <button
                   type="button"
                   onClick={() => setRoomDialog({ type: 'add' })}
-                  className="mt-4 rounded-lg bg-stone-900 px-4 py-2 text-sm text-white"
+                  className="btn-a mt-4"
                 >
                   Add a room
                 </button>
@@ -278,16 +318,27 @@ export function Artist() {
         </section>
       )}
 
-      {view === 'list' && (
-        <section className="mt-8">
-          <ArtListView
-            artwork={artwork}
-            furnitureNameByArtId={furnitureNameByArtId}
-            onSelect={(item) => {
-              setSelectedArtwork(item)
-              setSelectedFurniture(undefined)
-            }}
-          />
+      {catalog === 'gallery' && (
+        <section className="mt-6">
+          {galleryLayout === 'grid' ? (
+            <ArtGridView
+              artwork={artwork}
+              furnitureNameByArtId={furnitureNameByArtId}
+              onSelect={(item) => {
+                setSelectedArtwork(item)
+                setSelectedFurniture(undefined)
+              }}
+            />
+          ) : (
+            <ArtListView
+              artwork={artwork}
+              furnitureNameByArtId={furnitureNameByArtId}
+              onSelect={(item) => {
+                setSelectedArtwork(item)
+                setSelectedFurniture(undefined)
+              }}
+            />
+          )}
         </section>
       )}
 

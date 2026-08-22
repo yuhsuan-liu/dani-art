@@ -1,9 +1,9 @@
 import type { Furniture } from '../../types'
 
 const fills: Record<Furniture['status'], string> = {
-  available: '#a8a29e',
-  reserved: '#ea580c',
-  purchased: '#d97706',
+  available: '#c4a574',
+  reserved: '#c4a574',
+  purchased: '#c4a574',
 }
 
 export function FurnitureSilhouette({

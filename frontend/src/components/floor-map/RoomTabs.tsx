@@ -32,10 +32,13 @@ export function RoomTabs({
               className={`rounded-full px-4 py-1.5 text-sm ${
                 active
                   ? 'bg-stone-900 text-white'
-                  : 'border border-stone-300 bg-white text-stone-600 hover:bg-stone-50'
+                  : room.is_demo
+                    ? 'border border-dashed border-stone-300 bg-stone-100 text-stone-500'
+                    : 'border border-stone-300 bg-white text-stone-600 hover:bg-stone-50'
               }`}
             >
               {room.name}
+              {room.is_demo ? ' · demo' : ''}
             </button>
             {editMode && active && (
               <>

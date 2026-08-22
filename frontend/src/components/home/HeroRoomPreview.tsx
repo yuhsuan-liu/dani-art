@@ -12,9 +12,9 @@ const pieces: FurniturePreview[] = [
 ]
 
 const statusStyles: Record<FurniturePreview['status'], string> = {
-  available: 'bg-stone-200/90 text-stone-600 grayscale',
-  purchased: 'bg-amber-100 text-amber-900 ring-2 ring-amber-400',
-  reserved: 'bg-orange-50 text-orange-800 ring-2 ring-orange-300',
+  available: 'bg-white/95 text-stone-700',
+  purchased: 'bg-white/95 text-stone-700',
+  reserved: 'bg-white/95 text-stone-700',
 }
 
 export function HeroRoomPreview() {
@@ -30,12 +30,11 @@ export function HeroRoomPreview() {
           key={piece.name}
           className={`absolute flex flex-col items-center gap-1 ${piece.className}`}
         >
-          <FurnitureIcon name={piece.name} status={piece.status} />
-          <div
-            className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium shadow-sm ${statusStyles[piece.status]}`}
-          >
-            {piece.name} {piece.price}
-            {piece.status === 'purchased' ? ' ✓' : ''}
+          <div className={piece.status === 'purchased' ? 'art-frame w-full' : 'w-full'}>
+            <FurnitureIcon name={piece.name} />
+          </div>
+          <div className={`furn-tag ${statusStyles[piece.status]}`}>
+            {piece.name} {piece.status === 'purchased' ? 'Sold' : piece.status === 'reserved' ? 'Hold' : piece.price}
           </div>
         </div>
       ))}
@@ -43,14 +42,8 @@ export function HeroRoomPreview() {
   )
 }
 
-function FurnitureIcon({
-  name,
-  status,
-}: {
-  name: string
-  status: FurniturePreview['status']
-}) {
-  const fill = status === 'purchased' ? '#d97706' : status === 'reserved' ? '#ea580c' : '#a8a29e'
+function FurnitureIcon({ name }: { name: string }) {
+  const fill = '#c4a574'
 
   if (name === 'Bed') {
     return (

@@ -1,15 +1,9 @@
 import { Check } from 'lucide-react'
 import { useRef, type PointerEvent } from 'react'
-import { MOCK_PURCHASE_NOTES } from '../../data/mockRegistry'
+import { isDemoRecord, MOCK_PURCHASE_NOTES } from '../../data/mockRegistry'
 import { formatPrice } from '../../lib/utils'
 import type { Artwork, Furniture } from '../../types'
 import { FurnitureSilhouette } from './FurnitureSilhouette'
-
-const statusClass: Record<Furniture['status'], string> = {
-  available: 'grayscale opacity-80 hover:opacity-100',
-  reserved: 'ring-2 ring-orange-400',
-  purchased: 'ring-2 ring-amber-400',
-}
 
 type Props = {
   item: Furniture
@@ -30,9 +24,12 @@ export function FurnitureItem({
   onMove,
   onMoveEnd,
 }: Props) {
-  const width = (item.width ?? 120) * scale
-  const height = (item.height ?? 80) * scale
+  const width = Math.max((item.width ?? 120) * scale, 44)
+  const height = Math.max((item.height ?? 80) * scale, 44)
   const purchaseNote = MOCK_PURCHASE_NOTES[item.id]
+  const demo = isDemoRecord(item)
+  const sold = item.status === 'purchased'
+  const hold = item.status === 'reserved'
   const dragRef = useRef<{
     startClientX: number
     startClientY: number
@@ -85,6 +82,8 @@ export function FurnitureItem({
     }
   }
 
+  const statusLabel = sold ? 'Sold' : hold ? 'Hold' : formatPrice(item.price)
+
   return (
     <button
       type="button"
@@ -94,9 +93,7 @@ export function FurnitureItem({
       onPointerCancel={() => {
         dragRef.current = null
       }}
-      className={`group absolute touch-none text-left ${statusClass[item.status]} ${
-        editMode ? 'cursor-grab active:cursor-grabbing' : ''
-      }`}
+      className={`furn-piece ${editMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
       style={{
         left: item.position_x * scale,
         top: item.position_y * scale,
@@ -105,43 +102,35 @@ export function FurnitureItem({
         zIndex: item.z_index,
         transform: item.rotation ? `rotate(${item.rotation}deg)` : undefined,
       }}
-      aria-label={`${item.name}, ${formatPrice(item.price)}`}
+      aria-label={`${item.name}, ${statusLabel}${artwork ? `, ${artwork.title}` : ''}`}
     >
-      {item.image_url ? (
-        <img
-          src={item.image_url}
-          alt=""
-          className="pointer-events-none h-[70%] w-full object-contain"
-          draggable={false}
-        />
-      ) : (
-        <div className="pointer-events-none h-[70%] w-full">
+      <div className={`relative h-[70%] w-full overflow-hidden rounded-md ${sold ? 'art-frame' : ''}`}>
+        {item.image_url ? (
+          <img
+            src={item.image_url}
+            alt=""
+            className="pointer-events-none h-full w-full object-cover"
+            draggable={false}
+          />
+        ) : (
           <FurnitureSilhouette name={item.name} status={item.status} />
-        </div>
-      )}
-      <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-stone-700 shadow-sm">
-        {item.name} {formatPrice(item.price)}
-        {item.status === 'purchased' && <Check className="h-3 w-3 text-amber-700" />}
+        )}
+        {!editMode && !sold && artwork?.image_url && (
+          <img
+            src={artwork.image_url}
+            alt=""
+            className="furn-art-preview"
+            draggable={false}
+          />
+        )}
+      </div>
+      <span className="furn-tag">
+        {item.name} {sold ? 'Sold' : hold ? 'Hold' : formatPrice(item.price)}
+        {sold && <Check className="h-3 w-3 shrink-0 text-amber-800" />}
       </span>
-
-      {!editMode && (
-        <div className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-52 -translate-x-1/2 rounded-lg border border-stone-200 bg-white p-3 text-xs shadow-lg group-hover:block group-focus-visible:block">
-          <p className="font-medium text-stone-900">{item.name}</p>
-          <p className="text-stone-600">{formatPrice(item.price)}</p>
-          {artwork && (
-            <p className="mt-1 truncate text-stone-500">{artwork.title}</p>
-          )}
-          {item.status === 'available' && (
-            <p className="mt-2 text-amber-800">Click to view artwork</p>
-          )}
-          {item.status === 'purchased' && (
-            <p className="mt-2 text-stone-500">{purchaseNote ?? 'Already purchased'}</p>
-          )}
-          {item.status === 'reserved' && (
-            <p className="mt-2 text-orange-700">Reserved / in progress</p>
-          )}
-        </div>
-      )}
+      {demo && purchaseNote ? (
+        <span className="sr-only">{purchaseNote}</span>
+      ) : null}
     </button>
   )
 }
