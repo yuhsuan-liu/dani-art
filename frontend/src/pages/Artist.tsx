@@ -12,11 +12,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { EditModeToolbar } from '../components/floor-map/EditModeToolbar'
 import { FurnitureEditPanel } from '../components/floor-map/FurnitureEditPanel'
 import { RoomCanvas } from '../components/floor-map/RoomCanvas'
+import { RoomDecorControls } from '../components/floor-map/RoomDecorControls'
 import { RoomNameDialog, RoomTabs } from '../components/floor-map/RoomTabs'
 import { isDemoRecord } from '../data/mockRegistry'
 import { getArtist } from '../lib/artists'
 import { getArtworkByArtist } from '../lib/artwork'
 import { clearAllDemoData } from '../lib/demo'
+import { normalizeRoomDecor } from '../lib/roomDecor'
 import {
   createFurniture,
   createRoom,
@@ -29,9 +31,8 @@ import {
   updateRoom,
   type FurnitureDraft,
 } from '../lib/rooms'
-import type { Artist as ArtistType, Artwork, Furniture, Room } from '../types'
+import type { Artist as ArtistType, Artwork, Furniture, Room, RoomDecor } from '../types'
 
-type CatalogView = 'gallery' | 'plan'
 type GalleryLayout = 'grid' | 'list'
 type RoomDialog =
   | { type: 'add' }
@@ -46,7 +47,6 @@ export function Artist() {
   const [furniture, setFurniture] = useState<Furniture[]>([])
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string>()
-  const [catalog, setCatalog] = useState<CatalogView>('gallery')
   const [galleryLayout, setGalleryLayout] = useState<GalleryLayout>('grid')
   const [editMode, setEditMode] = useState(false)
   const [selectedFurniture, setSelectedFurniture] = useState<Furniture>()
@@ -93,6 +93,23 @@ export function Artist() {
       cancelled = true
     }
   }, [refresh])
+
+  useEffect(() => {
+    if (loading) return
+
+    function scrollToHash() {
+      const id = window.location.hash.replace('#', '')
+      if (id === 'gallery' || id === 'registry') {
+        window.requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+    }
+
+    scrollToHash()
+    window.addEventListener('hashchange', scrollToHash)
+    return () => window.removeEventListener('hashchange', scrollToHash)
+  }, [loading])
 
   const markSaving = useCallback(() => {
     setSaveStatus('saving')
@@ -181,6 +198,28 @@ export function Artist() {
     setSaveStatus('saved')
   }
 
+  async function handleDecorChange(decor: RoomDecor) {
+    if (!activeRoom) return
+
+    if (isDemoRecord(activeRoom)) {
+      setRooms((current) =>
+        current.map((room) => (room.id === activeRoom.id ? { ...room, decor } : room)),
+      )
+      return
+    }
+
+    try {
+      markSaving()
+      await updateRoom(activeRoom.id, { decor })
+      setRooms((current) =>
+        current.map((room) => (room.id === activeRoom.id ? { ...room, decor } : room)),
+      )
+      setSaveStatus('saved')
+    } catch {
+      setSaveStatus('error')
+    }
+  }
+
   if (loading) {
     return <LoadingSpinner label="Loading artist…" />
   }
@@ -225,33 +264,6 @@ export function Artist() {
         </div>
       </section>
 
-      <div className="mt-6 space-y-3">
-        <ViewSwitch
-          label="Catalog view"
-          value={catalog}
-          onChange={(next) => {
-            setCatalog(next)
-            setEditMode(false)
-          }}
-          options={[
-            { id: 'gallery', label: 'Gallery' },
-            { id: 'plan', label: 'Floor plan' },
-          ]}
-        />
-        {catalog === 'gallery' && (
-          <ViewSwitch
-            label="Gallery layout"
-            value={galleryLayout}
-            onChange={setGalleryLayout}
-            compact
-            options={[
-              { id: 'grid', label: 'Grid' },
-              { id: 'list', label: 'List' },
-            ]}
-          />
-        )}
-      </div>
-
       <div className="mt-6">
         <DemoDataBanner
           hasDemo={
@@ -269,8 +281,62 @@ export function Artist() {
         />
       </div>
 
-      {catalog === 'plan' && (
-        <section className="mt-6 space-y-4">
+      <section id="gallery" className="mt-8 scroll-mt-24">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium tracking-[0.2em] text-amber-700 uppercase">
+              For sale
+            </p>
+            <h2 className="mt-2 font-serif text-2xl text-stone-900 sm:text-3xl">Artwork</h2>
+            <p className="mt-2 max-w-2xl text-sm text-stone-600">
+              Tap a piece to see details, price, and what furniture it funds.
+            </p>
+          </div>
+          <ViewSwitch
+            label="Gallery layout"
+            value={galleryLayout}
+            onChange={setGalleryLayout}
+            compact
+            options={[
+              { id: 'grid', label: 'Grid' },
+              { id: 'list', label: 'List' },
+            ]}
+          />
+        </div>
+        <div className="mt-6">
+          {galleryLayout === 'grid' ? (
+            <ArtGridView
+              artwork={artwork}
+              furnitureNameByArtId={furnitureNameByArtId}
+              onSelect={(item) => {
+                setSelectedArtwork(item)
+                setSelectedFurniture(undefined)
+              }}
+            />
+          ) : (
+            <ArtListView
+              artwork={artwork}
+              furnitureNameByArtId={furnitureNameByArtId}
+              onSelect={(item) => {
+                setSelectedArtwork(item)
+                setSelectedFurniture(undefined)
+              }}
+            />
+          )}
+        </div>
+      </section>
+
+      <section id="registry" className="mt-12 scroll-mt-24 border-t border-stone-200 pt-10">
+        <p className="text-xs font-medium tracking-[0.2em] text-amber-700 uppercase">
+          The registry
+        </p>
+        <h2 className="mt-2 font-serif text-2xl text-stone-900 sm:text-3xl">Floor plan</h2>
+        <p className="mt-2 max-w-2xl text-sm text-stone-600">
+          Each item is something Dani wants. Tap furniture to see the linked painting — buy
+          the art, he gets the piece.
+        </p>
+
+        <div className="mt-6 space-y-4">
           {isArtist && (
             <EditModeToolbar
               editMode={editMode}
@@ -284,6 +350,13 @@ export function Artist() {
                 setAddingFurniture(true)
                 setEditingFurniture(null)
               }}
+            />
+          )}
+
+          {isArtist && editMode && activeRoom && (
+            <RoomDecorControls
+              decor={normalizeRoomDecor(activeRoom.decor)}
+              onChange={handleDecorChange}
             />
           )}
 
@@ -328,32 +401,8 @@ export function Artist() {
               )}
             </div>
           )}
-        </section>
-      )}
-
-      {catalog === 'gallery' && (
-        <section className="mt-6">
-          {galleryLayout === 'grid' ? (
-            <ArtGridView
-              artwork={artwork}
-              furnitureNameByArtId={furnitureNameByArtId}
-              onSelect={(item) => {
-                setSelectedArtwork(item)
-                setSelectedFurniture(undefined)
-              }}
-            />
-          ) : (
-            <ArtListView
-              artwork={artwork}
-              furnitureNameByArtId={furnitureNameByArtId}
-              onSelect={(item) => {
-                setSelectedArtwork(item)
-                setSelectedFurniture(undefined)
-              }}
-            />
-          )}
-        </section>
-      )}
+        </div>
+      </section>
 
       {!editMode && modalArtwork && (
         <ArtDetailModal

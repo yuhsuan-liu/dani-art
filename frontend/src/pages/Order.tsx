@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import { OrderForm, type OrderFormData } from '../components/order/OrderForm'
 import { PaymentRedirect } from '../components/order/PaymentRedirect'
 import { OrderConfirmation } from '../components/order/OrderConfirmation'
+import { createGuestOrder } from '../lib/orders'
+import { supabase } from '../lib/supabase'
 import type { Artwork, Furniture, Order } from '../types'
 
 type OrderStep = 'form' | 'payment' | 'confirmation'
@@ -68,7 +69,7 @@ export function OrderPage() {
     const shippingFee = SHIPPING_FEES[formData.deliveryType]
     const totalAmount = Number(artwork.price) + shippingFee
 
-    const orderData = {
+    const orderData = await createGuestOrder({
       artwork_id: artwork.id,
       furniture_id: furniture.id,
       customer_name: formData.customerName,
@@ -79,31 +80,10 @@ export function OrderPage() {
       special_instructions: formData.specialInstructions || null,
       total_amount: totalAmount,
       shipping_fee: shippingFee,
-      status: 'pending',
       payment_method: paymentMethod,
-    }
+    })
 
-    const { data, error } = await supabase
-      .from('orders')
-      .insert(orderData)
-      .select()
-      .single()
-
-    if (error) throw error
-
-    // Update artwork status to reserved
-    await supabase
-      .from('artwork')
-      .update({ status: 'reserved' })
-      .eq('id', artwork.id)
-
-    // Update furniture status to reserved
-    await supabase
-      .from('furniture')
-      .update({ status: 'reserved' })
-      .eq('id', furniture.id)
-
-    setOrder(data)
+    setOrder(orderData)
     setStep('payment')
   }
 

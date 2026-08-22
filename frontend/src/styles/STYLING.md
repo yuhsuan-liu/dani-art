@@ -87,6 +87,12 @@ Labels: **Gallery** (paintings) and **Floor plan** (wishlist map).
 | `furn-piece` | Furniture hit target on the plan |
 | `furn-tag` | Name + price + Hold/Sold |
 | `furn-art-preview` | Painting overlay on desktop hover |
+| `room-frame` | Outer floor plan container with shadow |
+| `room-shell` | Walls + floor + carpet inside the plan |
+| `room-walls-warm` / `room-walls-neutral` | Wall tone |
+| `room-floor-oak` / `room-floor-plain` | Floor material |
+| `room-carpet-sand` / `rose` / `slate` / `off` | Area rug (toggle in edit mode) |
+| `furn-muted` | Unsold furniture — greyed until funded |
 | `sheet` | Bottom sheet on phone, centered dialog on desktop |
 
 ## Footer

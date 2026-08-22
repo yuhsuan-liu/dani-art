@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type TouchEvent, type TouchList, type WheelEvent } from 'react'
+import { normalizeRoomDecor, roomDecorClasses } from '../../lib/roomDecor'
 import type { Artwork, Furniture, Room } from '../../types'
 import { FurnitureItem } from './FurnitureItem'
 
@@ -33,6 +34,7 @@ export function RoomCanvas({
   const pinchRef = useRef<{ distance: number; zoom: number } | null>(null)
   const [fitScale, setFitScale] = useState(1)
   const [userZoom, setUserZoom] = useState(1)
+  const decor = normalizeRoomDecor(room.decor)
 
   useEffect(() => {
     const el = frameRef.current
@@ -90,11 +92,7 @@ export function RoomCanvas({
       )}
       <div
         ref={frameRef}
-        className={`relative w-full rounded-2xl border bg-[#f3efe6] ${
-          editMode
-            ? 'overflow-hidden border-amber-300 ring-2 ring-amber-200'
-            : 'overflow-auto border-stone-200 touch-pan-x touch-pan-y'
-        }`}
+        className={`room-frame ${editMode ? 'room-frame-edit' : 'room-frame-view'}`}
         style={{ maxHeight: editMode ? undefined : '70dvh' }}
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
@@ -102,7 +100,7 @@ export function RoomCanvas({
         onTouchEnd={handleTouchEnd}
       >
         <div
-          className="relative"
+          className="relative p-3"
           style={{
             width: room.width * scale,
             height: room.height * scale,
@@ -110,9 +108,12 @@ export function RoomCanvas({
           }}
         >
           <div
-            className="absolute inset-3 rounded-xl border border-dashed border-stone-300/80 bg-[linear-gradient(90deg,rgba(0,0,0,0.035)_1px,transparent_1px),linear-gradient(rgba(0,0,0,0.035)_1px,transparent_1px)] bg-[size:28px_28px]"
+            className={`room-shell absolute inset-3 ${roomDecorClasses(decor)}`}
             aria-hidden
-          />
+          >
+            <div className="room-window-light" />
+            <div className="room-baseboard" />
+          </div>
           {furniture.map((item) => (
             <FurnitureItem
               key={item.id}

@@ -16,24 +16,17 @@ type BannerProps = {
 }
 
 export function DemoDataBanner({ hasDemo, onClearDemo }: BannerProps) {
-  if (!hasDemo) return null
+  if (!hasDemo || !onClearDemo) return null
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-stone-300 bg-stone-100/80 px-4 py-3 text-sm text-stone-600">
-      <p>
-        Grey items marked <DemoBadge className="align-middle" /> are sample data for
-        layout testing. Anything Dani adds is saved as real (no demo flag) and
-        will not collide with these <code className="text-xs">demo-*</code> IDs.
-      </p>
-      {onClearDemo && (
-        <button
-          type="button"
-          onClick={onClearDemo}
-          className="shrink-0 rounded-lg border border-stone-400 px-3 py-1.5 text-xs text-stone-700 hover:bg-white"
-        >
-          Remove all demo data
-        </button>
-      )}
+    <div className="mb-6 flex justify-end">
+      <button
+        type="button"
+        onClick={onClearDemo}
+        className="rounded-lg border border-stone-300 bg-stone-50 px-3 py-1.5 text-xs text-stone-600 hover:bg-white"
+      >
+        Remove demo data
+      </button>
     </div>
   )
 }

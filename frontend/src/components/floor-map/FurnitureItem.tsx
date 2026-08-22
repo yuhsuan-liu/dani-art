@@ -30,6 +30,7 @@ export function FurnitureItem({
   const demo = isDemoRecord(item)
   const sold = item.status === 'purchased'
   const hold = item.status === 'reserved'
+  const muted = item.status === 'available'
   const dragRef = useRef<{
     startClientX: number
     startClientY: number
@@ -104,7 +105,7 @@ export function FurnitureItem({
       }}
       aria-label={`${item.name}, ${statusLabel}${artwork ? `, ${artwork.title}` : ''}`}
     >
-      <div className={`relative h-[70%] w-full overflow-hidden rounded-md ${sold ? 'art-frame' : ''}`}>
+      <div className={`relative h-[70%] w-full overflow-hidden rounded-md ${sold ? 'art-frame' : muted ? 'furn-muted' : ''}`}>
         {item.image_url ? (
           <img
             src={item.image_url}

@@ -150,6 +150,101 @@
     @apply max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:max-h-[90dvh] sm:rounded-2xl sm:p-6;
   }
 
+  /* ── Floor plan room shell ──────────────────────────── */
+  .room-frame {
+    @apply relative w-full overflow-hidden rounded-2xl border border-stone-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_8px_24px_rgba(28,25,23,0.08)];
+  }
+
+  .room-frame-view {
+    @apply overflow-auto touch-pan-x touch-pan-y;
+  }
+
+  .room-frame-edit {
+    @apply overflow-hidden border-amber-300 ring-2 ring-amber-200;
+  }
+
+  .room-shell {
+    @apply overflow-hidden rounded-xl;
+    box-shadow: inset 0 0 0 12px rgba(68, 52, 40, 0.14);
+  }
+
+  .room-walls-warm {
+    background-color: #ebe3d6;
+  }
+
+  .room-walls-neutral {
+    background-color: #e8e4de;
+  }
+
+  .room-floor-oak {
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 28%),
+      repeating-linear-gradient(
+        90deg,
+        #c9a56c 0,
+        #c9a56c 38px,
+        #b89258 38px,
+        #b89258 76px
+      );
+  }
+
+  .room-floor-plain {
+    background-color: #ddd4c6;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 35%);
+  }
+
+  .room-carpet-off::before {
+    content: none;
+  }
+
+  .room-carpet-sand::before,
+  .room-carpet-rose::before,
+  .room-carpet-slate::before {
+    content: '';
+    position: absolute;
+    left: 14%;
+    top: 22%;
+    width: 72%;
+    height: 56%;
+    border-radius: 1.25rem;
+    opacity: 0.92;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  }
+
+  .room-carpet-sand::before {
+    background: radial-gradient(ellipse at center, #d8cbb8 0%, #c8b9a3 100%);
+  }
+
+  .room-carpet-rose::before {
+    background: radial-gradient(ellipse at center, #dcc5bc 0%, #c9a89c 100%);
+  }
+
+  .room-carpet-slate::before {
+    background: radial-gradient(ellipse at center, #c5c2bc 0%, #aba59c 100%);
+  }
+
+  .room-window-light {
+    @apply pointer-events-none absolute inset-0;
+    background: linear-gradient(135deg, rgba(255, 248, 230, 0.45) 0%, transparent 42%);
+  }
+
+  .room-baseboard {
+    @apply pointer-events-none absolute inset-x-0 bottom-0 h-3;
+    background: linear-gradient(to top, rgba(68, 52, 40, 0.22), transparent);
+  }
+
+  .furn-muted img,
+  .furn-muted svg {
+    filter: grayscale(0.55) saturate(0.7);
+    opacity: 0.82;
+  }
+
+  .furn-piece:not(:has(.furn-muted)) img,
+  .furn-piece:not(:has(.furn-muted)) svg {
+    filter: none;
+    opacity: 1;
+  }
+
   /* ── Footer ─────────────────────────────────────────── */
   .site-footer {
     @apply mt-auto border-t border-stone-200;

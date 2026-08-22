@@ -13,6 +13,19 @@ export interface User {
 // Alias for backward compatibility
 export type Artist = User
 
+export type RoomWallStyle = 'warm' | 'neutral'
+export type RoomFloorStyle = 'oak' | 'plain'
+export type RoomCarpetTone = 'sand' | 'rose' | 'slate'
+
+export interface RoomDecor {
+  wall_style: RoomWallStyle
+  floor_style: RoomFloorStyle
+  carpet: {
+    enabled: boolean
+    tone: RoomCarpetTone
+  }
+}
+
 export interface Room {
   id: string
   user_id: string
@@ -21,6 +34,7 @@ export interface Room {
   background_url?: string
   width: number
   height: number
+  decor?: RoomDecor
   created_at: string
   /** Frontend-only flag for seed data. Never write to production DB. */
   is_demo?: boolean

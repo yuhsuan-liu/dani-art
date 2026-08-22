@@ -2,6 +2,7 @@ import { isDemoRecord } from '../data/mockRegistry'
 import { isDaniSlug, resolveArtistUserId } from './artists'
 import { demoFurnitureList, demoRoomList } from './demoContent'
 import { useMockFallback } from './dataMode'
+import { withRoomDecor } from './roomDecor'
 import { supabase } from './supabase'
 import type { Furniture, Room } from '../types'
 
@@ -34,7 +35,7 @@ export async function getRoomsByArtist(userIdOrSlug: string): Promise<Room[]> {
     return showDemo ? demoRoomList() : []
   }
 
-  return data
+  return data.map(withRoomDecor)
 }
 
 export async function createRoom(input: {
@@ -71,7 +72,7 @@ export async function createRoom(input: {
 
 export async function updateRoom(
   id: string,
-  patch: Partial<Pick<Room, 'name' | 'order' | 'background_url' | 'width' | 'height'>>,
+  patch: Partial<Pick<Room, 'name' | 'order' | 'background_url' | 'width' | 'height' | 'decor'>>,
 ): Promise<Room> {
   const { data, error } = await supabase
     .from('rooms')
@@ -81,7 +82,7 @@ export async function updateRoom(
     .single()
 
   if (error) throw new Error(error.message)
-  return data
+  return withRoomDecor(data)
 }
 
 export async function deleteRoom(id: string): Promise<void> {

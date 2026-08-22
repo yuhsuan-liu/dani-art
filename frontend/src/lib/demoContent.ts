@@ -1,4 +1,5 @@
 import { fixDemoImageUrl, MOCK_ARTWORK, MOCK_FURNITURE, MOCK_ROOMS } from '../data/mockRegistry'
+import { withRoomDecor } from './roomDecor'
 import type { Artwork, Furniture, Room } from '../types'
 
 export function demoArtworkList(): Artwork[] {
@@ -9,7 +10,7 @@ export function demoArtworkList(): Artwork[] {
 }
 
 export function demoRoomList(): Room[] {
-  return MOCK_ROOMS.map((room) => ({ ...room }))
+  return MOCK_ROOMS.map((room) => withRoomDecor(room))
 }
 
 export function demoFurnitureList(): Furniture[] {

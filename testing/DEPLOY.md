@@ -66,7 +66,8 @@ Without these secrets, the built site uses `placeholder.supabase.co` and **Googl
 Run in Supabase **SQL Editor**:
 
 `supabase/migrations/001_initial_schema.sql`  
-then `supabase/migrations/002_permissions_and_seed.sql`
+then `supabase/migrations/002_permissions_and_seed.sql`  
+then **`supabase/migrations/003_fix_users_rls_and_orders.sql`** (fixes purchase / “infinite recursion” error + guest checkout)
 
 Until seed runs, the site shows **local Unsplash demo** content when the DB is empty. After Dani adds real artwork, only real rows appear.
 
