@@ -11,6 +11,22 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
-  min-height: 100vh;
+@media print {
+  body.printing-receipt * {
+    visibility: hidden;
+  }
+
+  body.printing-receipt .order-receipt-print-target,
+  body.printing-receipt .order-receipt-print-target * {
+    visibility: visible;
+  }
+
+  body.printing-receipt .order-receipt-print-target {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+  }
 }

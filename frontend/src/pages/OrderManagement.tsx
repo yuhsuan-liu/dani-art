@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { OrderReceipt } from '../components/order/OrderReceipt'
+import { PrintReceiptButton } from '../components/order/PrintReceiptButton'
+import { PrintReceiptReminder } from '../components/order/printReceipt'
 import { supabase } from '../lib/supabase'
 import type { Order, Artwork, Furniture } from '../types'
 
@@ -104,11 +108,7 @@ export function OrderManagement() {
   }, {} as Record<string, number>)
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-stone-500">Loading orders...</div>
-      </div>
-    )
+    return <LoadingSpinner label="Loading orders…" />
   }
 
   return (
@@ -117,6 +117,8 @@ export function OrderManagement() {
         <h1 className="font-serif text-3xl text-stone-900">Order Management</h1>
         <p className="mt-2 text-stone-600">Manage and track your orders</p>
       </div>
+
+      <PrintReceiptReminder forArtist className="mb-6" />
 
       {/* Stats */}
       <div className="mb-6 flex flex-wrap gap-2">
@@ -227,6 +229,23 @@ export function OrderManagement() {
                   Phone: {order.customer_phone}
                 </div>
               )}
+
+              {order.artwork && order.furniture ? (
+                <details className="mt-4 group">
+                  <summary className="cursor-pointer text-sm font-medium text-stone-700">
+                    View & print receipt
+                  </summary>
+                  <div className="mt-3 space-y-3">
+                    <OrderReceipt
+                      order={order}
+                      artwork={order.artwork}
+                      furniture={order.furniture}
+                      receiptId={`receipt-${order.id}`}
+                    />
+                    <PrintReceiptButton receiptId={`receipt-${order.id}`} />
+                  </div>
+                </details>
+              ) : null}
             </div>
           ))}
         </div>

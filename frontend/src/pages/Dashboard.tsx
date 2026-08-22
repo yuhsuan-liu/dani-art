@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DemoBadge, DemoDataBanner, demoRowClass } from '../components/common/DemoBadge'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { useAuth } from '../contexts/AuthContext'
 import { isDemoRecord } from '../data/mockRegistry'
 import { getArtworkById } from '../lib/artwork'
 import { clearAllDemoData } from '../lib/demo'
+import { PrintReceiptReminder } from '../components/order/printReceipt'
 import { getDashboardStats, getRecentOrders } from '../lib/orders'
 import { formatDate, formatPrice } from '../lib/utils'
 import type { Order } from '../types'
@@ -39,7 +41,7 @@ export function Dashboard() {
       try {
         const [nextStats, recent] = await Promise.all([
           getDashboardStats(artistId),
-          getRecentOrders(8),
+          getRecentOrders(8, artistId),
         ])
         const withTitles = await Promise.all(
           recent.map(async (order) => {
@@ -65,11 +67,7 @@ export function Dashboard() {
   }, [artistId])
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-stone-500">Loading dashboard...</div>
-      </div>
-    )
+    return <LoadingSpinner label="Loading dashboard…" />
   }
 
   return (
@@ -94,7 +92,7 @@ export function Dashboard() {
           await clearAllDemoData()
           const [nextStats, recent] = await Promise.all([
             getDashboardStats(artistId),
-            getRecentOrders(8),
+            getRecentOrders(8, artistId),
           ])
           setStats(nextStats)
           setOrders(recent)
@@ -113,10 +111,13 @@ export function Dashboard() {
       </div>
 
       {stats.pendingOrders > 0 && (
-        <div className="mb-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <p className="text-amber-800">
-            You have <strong>{stats.pendingOrders}</strong> pending order(s) awaiting confirmation.
-          </p>
+        <div className="mb-8 space-y-3">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-amber-800">
+              You have <strong>{stats.pendingOrders}</strong> pending order(s) awaiting confirmation.
+            </p>
+          </div>
+          <PrintReceiptReminder forArtist />
         </div>
       )}
 
