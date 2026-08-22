@@ -19,11 +19,11 @@ export function Header() {
         Art
       </NavLink>
       <NavLink to="/blog" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-        Notes
+        Feed
       </NavLink>
       {isAuthenticated && isArtist && (
         <NavLink to="/dashboard" className={navLinkClass} onClick={() => setMenuOpen(false)}>
-          Studio
+          Reports
         </NavLink>
       )}
     </>

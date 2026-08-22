@@ -9,6 +9,11 @@ import type { Artwork, Furniture, Order } from '../types'
 
 type OrderStep = 'form' | 'payment' | 'confirmation'
 
+interface ArtistPaymentInfo {
+  venmo_handle?: string
+  paypal_email?: string
+}
+
 const SHIPPING_FEES = {
   pickup: 0,
   local_delivery: 15,
@@ -23,6 +28,7 @@ export function OrderPage() {
   const [artwork, setArtwork] = useState<Artwork | null>(null)
   const [furniture, setFurniture] = useState<Furniture | null>(null)
   const [order, setOrder] = useState<Order | null>(null)
+  const [artistPayment, setArtistPayment] = useState<ArtistPaymentInfo>({})
   const [paymentMethod, setPaymentMethod] = useState<'venmo' | 'paypal'>('venmo')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +62,20 @@ export function OrderPage() {
         .single()
 
       setFurniture(furnitureData)
+
+      // Fetch artist's payment info
+      const { data: artistData } = await supabase
+        .from('users')
+        .select('venmo_handle, paypal_email')
+        .eq('id', artworkData.user_id)
+        .single()
+
+      if (artistData) {
+        setArtistPayment({
+          venmo_handle: artistData.venmo_handle || undefined,
+          paypal_email: artistData.paypal_email || undefined,
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load artwork')
     } finally {
@@ -205,6 +225,8 @@ export function OrderPage() {
           artworkTitle={artwork.title}
           orderId={order.id}
           paymentMethod={paymentMethod}
+          recipientVenmo={artistPayment.venmo_handle}
+          recipientPaypal={artistPayment.paypal_email}
           onComplete={handlePaymentComplete}
         />
       )}

@@ -10,6 +10,7 @@ import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { OrderPage } from './pages/Order'
 import { OrderManagement } from './pages/OrderManagement'
+import { Settings } from './pages/Settings'
 
 const basename =
   import.meta.env.BASE_URL === '/'
@@ -34,6 +35,7 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/manage/art" element={<ArtManagement />} />
               <Route path="/manage/orders" element={<OrderManagement />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />

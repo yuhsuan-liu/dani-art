@@ -7,6 +7,8 @@ export interface User {
   bio?: string
   profile_pic_url?: string
   role: UserRole
+  venmo_handle?: string
+  paypal_email?: string
   created_at: string
 }
 

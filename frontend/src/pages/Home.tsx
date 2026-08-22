@@ -35,7 +35,7 @@ export function Home() {
                 View the work
               </Link>
               <Link to="/blog" className="btn-b w-full sm:w-auto">
-                Notes
+                Feed
               </Link>
             </div>
           </div>

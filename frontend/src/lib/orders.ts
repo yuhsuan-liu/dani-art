@@ -149,3 +149,120 @@ export async function getDashboardStats(userId: string) {
 export async function clearDemoOrders(): Promise<void> {
   // Demo orders only exist in mock mode.
 }
+
+export async function getPendingOrderByArtworkId(
+  artworkId: string,
+): Promise<Order | null> {
+  if (useMockFallback()) {
+    return (
+      MOCK_ORDERS.find(
+        (order) => order.artwork_id === artworkId && order.status === 'pending',
+      ) ?? null
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('artwork_id', artworkId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  return data
+}
+
+export async function getPendingOrdersByArtworkIds(
+  artworkIds: string[],
+): Promise<Record<string, Order>> {
+  if (artworkIds.length === 0) return {}
+
+  if (useMockFallback()) {
+    return Object.fromEntries(
+      MOCK_ORDERS.filter(
+        (order) =>
+          order.status === 'pending' && artworkIds.includes(order.artwork_id),
+      ).map((order) => [order.artwork_id, order]),
+    )
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .in('artwork_id', artworkIds)
+    .eq('status', 'pending')
+
+  if (error) throw new Error(error.message)
+
+  const byArtwork: Record<string, Order> = {}
+  for (const order of data ?? []) {
+    if (!byArtwork[order.artwork_id]) {
+      byArtwork[order.artwork_id] = order
+    }
+  }
+  return byArtwork
+}
+
+async function cancelOrderAndReleaseSequential(artworkId: string): Promise<void> {
+  const pending = await getPendingOrderByArtworkId(artworkId)
+
+  if (pending) {
+    const { error: orderError } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled' })
+      .eq('id', pending.id)
+
+    if (orderError) throw new Error(orderError.message)
+
+    if (pending.furniture_id) {
+      const { error: furnitureError } = await supabase
+        .from('furniture')
+        .update({ status: 'available' })
+        .eq('id', pending.furniture_id)
+
+      if (furnitureError) throw new Error(furnitureError.message)
+    }
+  }
+
+  const { error: artworkError } = await supabase
+    .from('artwork')
+    .update({ status: 'available' })
+    .eq('id', artworkId)
+    .eq('status', 'reserved')
+
+  if (artworkError) throw new Error(artworkError.message)
+
+  const { error: linkedFurnitureError } = await supabase
+    .from('furniture')
+    .update({ status: 'available' })
+    .eq('artwork_id', artworkId)
+    .eq('status', 'reserved')
+
+  if (linkedFurnitureError) throw new Error(linkedFurnitureError.message)
+}
+
+/** Cancel pending order and release artwork + linked furniture back to available. */
+export async function cancelOrderAndRelease(artworkId: string): Promise<void> {
+  if (useMockFallback()) {
+    throw new Error('Connect Supabase to cancel live orders.')
+  }
+
+  const { error } = await supabase.rpc('cancel_order_and_release', {
+    p_artwork_id: artworkId,
+  })
+
+  if (error) {
+    if (error.message.includes('cancel_order_and_release')) {
+      await cancelOrderAndReleaseSequential(artworkId)
+      return
+    }
+    throw new Error(error.message)
+  }
+}
+
+/** Alias for releasing a reserved piece back to available. */
+export async function markArtworkAvailable(artworkId: string): Promise<void> {
+  await cancelOrderAndRelease(artworkId)
+}

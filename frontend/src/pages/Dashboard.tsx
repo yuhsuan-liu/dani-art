@@ -188,8 +188,13 @@ export function Dashboard() {
           />
           <QuickAction
             to="/blog"
-            title="Notes & updates"
+            title="Feed & updates"
             description="Add a date or a short post with photos or video"
+          />
+          <QuickAction
+            to="/settings"
+            title="Settings"
+            description="Profile picture, Venmo & PayPal info"
           />
         </div>
       </section>
