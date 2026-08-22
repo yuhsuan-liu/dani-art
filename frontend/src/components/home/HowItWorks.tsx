@@ -1,3 +1,5 @@
+import { HeroRoomPreview } from './HeroRoomPreview'
+
 const steps = [
   {
     title: 'See the room',
@@ -37,6 +39,13 @@ export function HowItWorks() {
           </li>
         ))}
       </ol>
+
+      <div className="mx-auto mt-12 max-w-xl">
+        <HeroRoomPreview />
+        <p className="mt-3 text-center text-sm text-stone-500">
+          Gray furniture is still available. Color means that painting already sold.
+        </p>
+      </div>
     </section>
   )
 }

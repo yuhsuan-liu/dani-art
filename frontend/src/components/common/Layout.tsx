@@ -4,7 +4,7 @@ import { Header } from './Header'
 
 export function Layout() {
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAFAFA] text-stone-900">
+    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-[#FAFAFA] text-stone-900">
       <Header />
       <main className="flex-1">
         <Outlet />
