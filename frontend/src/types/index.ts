@@ -1,0 +1,89 @@
+export interface Artist {
+  id: string
+  email: string
+  name: string
+  bio?: string
+  profile_pic_url?: string
+  created_at: string
+}
+
+export interface Room {
+  id: string
+  artist_id: string
+  name: string
+  order: number
+  background_url?: string
+  width: number
+  height: number
+  created_at: string
+}
+
+export interface Furniture {
+  id: string
+  room_id: string
+  name: string
+  image_url: string
+  price: number
+  position_x: number
+  position_y: number
+  width?: number
+  height?: number
+  rotation: number
+  z_index: number
+  external_url?: string
+  artwork_id?: string
+  status: 'available' | 'reserved' | 'purchased'
+  created_at: string
+  updated_at: string
+}
+
+export interface Artwork {
+  id: string
+  artist_id: string
+  title: string
+  description?: string
+  price: number
+  image_url: string
+  medium?: string
+  dimensions?: string
+  status: 'available' | 'reserved' | 'sold'
+  created_at: string
+  updated_at: string
+}
+
+export interface Order {
+  id: string
+  artwork_id: string
+  furniture_id: string
+  customer_name: string
+  customer_email: string
+  customer_phone?: string
+  delivery_type: 'pickup' | 'local_delivery' | 'shipping'
+  shipping_address?: {
+    street: string
+    city: string
+    state: string
+    zip: string
+  }
+  special_instructions?: string
+  total_amount: number
+  shipping_fee: number
+  status: 'pending' | 'confirmed' | 'shipped' | 'completed' | 'cancelled'
+  payment_method?: 'venmo' | 'paypal'
+  payment_reference?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface BlogPost {
+  id: string
+  artist_id: string
+  title: string
+  content: string
+  featured_image_url?: string
+  category?: 'art_fair' | 'drumming' | 'general'
+  is_published: boolean
+  published_at?: string
+  created_at: string
+  updated_at: string
+}
