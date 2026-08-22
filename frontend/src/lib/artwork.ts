@@ -24,12 +24,20 @@ function shouldShowDemoForSlug(slug: string): boolean {
  */
 
 export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[]> {
-  if (useMockFallback()) return demoArtworkList()
+  console.log('[artwork] getArtworkByArtist called with:', userIdOrSlug)
+  console.log('[artwork] useMockFallback:', useMockFallback())
+  
+  if (useMockFallback()) {
+    console.log('[artwork] Using mock fallback')
+    return demoArtworkList()
+  }
 
   const showDemo = shouldShowDemoForSlug(userIdOrSlug)
   const userId = await resolveArtistUserId(userIdOrSlug)
+  console.log('[artwork] Resolved userId:', userId, 'showDemo:', showDemo)
 
   if (!userId) {
+    console.log('[artwork] No userId, returning demo:', showDemo)
     return showDemo ? demoArtworkList() : []
   }
 
@@ -39,15 +47,19 @@ export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
+  console.log('[artwork] Supabase response - data:', data?.length, 'error:', error?.message)
+
   if (error) {
     console.warn('Artwork fetch failed, using demo content:', error.message)
     return showDemo ? demoArtworkList() : []
   }
 
   if (!data?.length) {
+    console.log('[artwork] No data, returning demo')
     return showDemo ? demoArtworkList() : []
   }
 
+  console.log('[artwork] Returning', data.length, 'artworks from database')
   return data.map((item) => ({
     ...item,
     image_url: fixDemoImageUrl(item.image_url),

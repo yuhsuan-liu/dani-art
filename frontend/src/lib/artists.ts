@@ -26,10 +26,19 @@ export { isDaniSlug }
 export async function resolveArtistUserId(
   idOrSlug: string,
 ): Promise<string | undefined> {
-  if (isUuid(idOrSlug)) return idOrSlug
-  if (!isSupabaseConfigured()) return undefined
+  console.log('[artists] resolveArtistUserId called with:', idOrSlug)
+  
+  if (isUuid(idOrSlug)) {
+    console.log('[artists] Input is UUID, returning as-is')
+    return idOrSlug
+  }
+  
+  if (!isSupabaseConfigured()) {
+    console.log('[artists] Supabase not configured')
+    return undefined
+  }
 
-  const { data: byName } = await supabase
+  const { data: byName, error: nameError } = await supabase
     .from('users')
     .select('id')
     .eq('role', 'artist')
@@ -37,15 +46,19 @@ export async function resolveArtistUserId(
     .limit(1)
     .maybeSingle()
 
+  console.log('[artists] Query by name result:', byName, 'error:', nameError?.message)
+
   if (byName?.id) return byName.id
 
   if (isDaniSlug(idOrSlug)) {
-    const { data: firstArtist } = await supabase
+    console.log('[artists] Trying to find any artist (dani slug fallback)')
+    const { data: firstArtist, error: artistError } = await supabase
       .from('users')
       .select('id')
       .eq('role', 'artist')
       .limit(1)
       .maybeSingle()
+    console.log('[artists] First artist result:', firstArtist, 'error:', artistError?.message)
     return firstArtist?.id
   }
 
