@@ -78,9 +78,11 @@ Until seed runs, the site shows **local Unsplash demo** content when the DB is e
 
 | Setting | Value |
 |---------|-------|
-| Site URL | `https://yuhsuan-liu.github.io/dani-art/` |
-| Redirect URLs | `https://yuhsuan-liu.github.io/dani-art/` |
+| **Site URL** | `https://yuhsuan-liu.github.io/dani-art/` |
+| **Redirect URLs** | `https://yuhsuan-liu.github.io/dani-art/` |
 | | `http://localhost:5173/` |
+
+**If login redirects to `localhost:3000`:** your Supabase **Site URL** is wrong. Change it from `http://localhost:3000` to `https://yuhsuan-liu.github.io/dani-art/` above, then save.
 
 **Google Cloud Console:** authorized origin `https://yuhsuan-liu.github.io`
 

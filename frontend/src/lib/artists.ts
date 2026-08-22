@@ -17,6 +17,8 @@ function isDaniSlug(idOrSlug: string): boolean {
   return value === DANI_SLUG || value === 'danny'
 }
 
+export { isDaniSlug }
+
 /**
  * Map a URL slug ("dani") or UUID to a users.id.
  * Returns undefined when the live DB has no matching artist.

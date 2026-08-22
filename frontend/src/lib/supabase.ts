@@ -21,26 +21,46 @@ export interface Database {
   }
 }
 
+/** Where Google OAuth should return after sign-in (works on GitHub Pages + local dev). */
+export function getAuthRedirectUrl(): string {
+  const base = import.meta.env.BASE_URL || '/'
+  const path = base.endsWith('/') ? base : `${base}/`
+  return `${window.location.origin}${path}`
+}
+
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      persistSession: true,
+    },
+  },
 )
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl) && Boolean(supabaseAnonKey)
 }
 
-// Auth helpers
 export async function signInWithGoogle() {
   if (!isSupabaseConfigured()) {
     throw new Error(
       'Sign-in is not configured on this site yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to GitHub Actions secrets, then redeploy.',
     )
   }
+
+  const redirectTo = getAuthRedirectUrl()
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
+      redirectTo,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
     },
   })
   if (error) throw error

@@ -1,6 +1,7 @@
-import { fixDemoImageUrl, MOCK_ARTWORK } from '../data/mockRegistry'
-import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
-import { resolveArtistUserId } from './artists'
+import { fixDemoImageUrl } from '../data/mockRegistry'
+import { isDaniSlug, resolveArtistUserId } from './artists'
+import { demoArtworkList } from './demoContent'
+import { useMockFallback } from './dataMode'
 import { supabase, isSupabaseConfigured } from './supabase'
 import type { Artwork } from '../types'
 
@@ -14,44 +15,43 @@ export type ArtworkDraft = {
   user_id: string
 }
 
+function shouldShowDemoForSlug(slug: string): boolean {
+  return isDaniSlug(slug) || slug === 'dani'
+}
+
 /**
  * Artwork API using Supabase
  */
 
 export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[]> {
+  if (useMockFallback()) return demoArtworkList()
+
+  const showDemo = shouldShowDemoForSlug(userIdOrSlug)
   const userId = await resolveArtistUserId(userIdOrSlug)
 
-  if (isSupabaseConfigured() && userId) {
-    const { data, error } = await supabase
-      .from('artwork')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      if (data.length > 0) {
-        return data.map((item) => ({
-          ...item,
-          image_url: fixDemoImageUrl(item.image_url),
-        }))
-      }
-      if (usePublicDemoWhenEmpty(0)) {
-        return MOCK_ARTWORK.map((item) => ({
-          ...item,
-          image_url: fixDemoImageUrl(item.image_url),
-        }))
-      }
-      return []
-    }
+  if (!userId) {
+    return showDemo ? demoArtworkList() : []
   }
 
-  if (useMockFallback()) {
-    return MOCK_ARTWORK.map((item) => ({
-      ...item,
-      image_url: fixDemoImageUrl(item.image_url),
-    }))
+  const { data, error } = await supabase
+    .from('artwork')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.warn('Artwork fetch failed, using demo content:', error.message)
+    return showDemo ? demoArtworkList() : []
   }
-  return []
+
+  if (!data?.length) {
+    return showDemo ? demoArtworkList() : []
+  }
+
+  return data.map((item) => ({
+    ...item,
+    image_url: fixDemoImageUrl(item.image_url),
+  }))
 }
 
 export async function getArtworkById(id: string): Promise<Artwork | undefined> {
@@ -67,10 +67,11 @@ export async function getArtworkById(id: string): Promise<Artwork | undefined> {
     }
   }
 
-  const mock = MOCK_ARTWORK.find((item) => item.id === id)
-  return mock && useMockFallback()
-    ? { ...mock, image_url: fixDemoImageUrl(mock.image_url) }
-    : undefined
+  if (useMockFallback()) {
+    const mock = demoArtworkList().find((item) => item.id === id)
+    return mock ? { ...mock } : undefined
+  }
+  return undefined
 }
 
 export async function createArtwork(draft: ArtworkDraft): Promise<Artwork> {

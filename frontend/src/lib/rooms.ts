@@ -1,7 +1,8 @@
-import { isDemoRecord, MOCK_FURNITURE, MOCK_ROOMS } from '../data/mockRegistry'
-import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
-import { resolveArtistUserId } from './artists'
-import { supabase, isSupabaseConfigured } from './supabase'
+import { isDemoRecord } from '../data/mockRegistry'
+import { isDaniSlug, resolveArtistUserId } from './artists'
+import { demoFurnitureList, demoRoomList } from './demoContent'
+import { useMockFallback } from './dataMode'
+import { supabase } from './supabase'
 import type { Furniture, Room } from '../types'
 
 /**
@@ -9,23 +10,31 @@ import type { Furniture, Room } from '../types'
  */
 
 export async function getRoomsByArtist(userIdOrSlug: string): Promise<Room[]> {
+  if (useMockFallback()) return demoRoomList()
+
+  const showDemo = isDaniSlug(userIdOrSlug) || userIdOrSlug === 'dani'
   const userId = await resolveArtistUserId(userIdOrSlug)
 
-  if (isSupabaseConfigured() && userId) {
-    const { data, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .eq('user_id', userId)
-      .order('order')
-
-    if (!error && data) {
-      if (data.length > 0) return data
-      if (usePublicDemoWhenEmpty(0)) return MOCK_ROOMS.map((room) => ({ ...room }))
-      return []
-    }
+  if (!userId) {
+    return showDemo ? demoRoomList() : []
   }
 
-  return useMockFallback() ? MOCK_ROOMS.map((room) => ({ ...room })) : []
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('user_id', userId)
+    .order('order')
+
+  if (error) {
+    console.warn('Rooms fetch failed, using demo content:', error.message)
+    return showDemo ? demoRoomList() : []
+  }
+
+  if (!data?.length) {
+    return showDemo ? demoRoomList() : []
+  }
+
+  return data
 }
 
 export async function createRoom(input: {
@@ -100,12 +109,12 @@ export async function getFurnitureByRoom(roomId: string): Promise<Furniture[]> {
 
 export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furniture[]> {
   const rooms = await getRoomsByArtist(userIdOrSlug)
-  if (rooms.length === 0) return []
+  if (rooms.length === 0) {
+    return isDaniSlug(userIdOrSlug) || userIdOrSlug === 'dani' ? demoFurnitureList() : []
+  }
 
   if (rooms.some(isDemoRecord)) {
-    return useMockFallback() || usePublicDemoWhenEmpty(rooms.filter((r) => !isDemoRecord(r)).length)
-      ? MOCK_FURNITURE.map((item) => ({ ...item }))
-      : []
+    return demoFurnitureList()
   }
 
   const roomIds = rooms.map((room) => room.id)
@@ -117,12 +126,14 @@ export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furnit
     .order('z_index')
 
   if (error) {
-    console.error('Error fetching furniture:', error)
-    return useMockFallback() ? MOCK_FURNITURE.map((item) => ({ ...item })) : []
+    console.warn('Furniture fetch failed, using demo content:', error.message)
+    return demoFurnitureList()
   }
-  if (!data || data.length === 0) {
-    return usePublicDemoWhenEmpty(0) ? MOCK_FURNITURE.map((item) => ({ ...item })) : []
+
+  if (!data?.length) {
+    return isDaniSlug(userIdOrSlug) || userIdOrSlug === 'dani' ? demoFurnitureList() : []
   }
+
   return data
 }
 
