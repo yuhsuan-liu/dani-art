@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { DemoBadge, DemoDataBanner, demoRowClass } from '../components/common/DemoBadge'
 import { useAuth } from '../contexts/AuthContext'
+import { isDemoRecord } from '../data/mockRegistry'
 import { getArtworkById } from '../lib/artwork'
+import { clearAllDemoData } from '../lib/demo'
 import { getDashboardStats, getRecentOrders } from '../lib/orders'
 import { formatDate, formatPrice } from '../lib/utils'
 import type { Order } from '../types'
@@ -78,8 +81,32 @@ export function Dashboard() {
         <p className="mt-2 text-stone-600">Here's an overview of your art registry</p>
       </div>
 
+      <DemoDataBanner
+        hasDemo={orders.some(isDemoRecord)}
+        onClearDemo={async () => {
+          if (
+            !window.confirm(
+              'Remove all demo data? Your real uploads stay.',
+            )
+          ) {
+            return
+          }
+          await clearAllDemoData()
+          const [nextStats, recent] = await Promise.all([
+            getDashboardStats(artistId),
+            getRecentOrders(8),
+          ])
+          setStats(nextStats)
+          setOrders(recent)
+        }}
+      />
+
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Revenue" value={formatPrice(stats.totalRevenue)} />
+        <StatCard
+          label="Revenue"
+          value={formatPrice(stats.totalRevenue)}
+          demoHint={orders.some(isDemoRecord)}
+        />
         <StatCard label="Active listings" value={stats.activeListings} />
         <StatCard label="Sold" value={stats.soldCount} />
         <StatCard label="Pending orders" value={stats.pendingOrders} />
@@ -115,8 +142,14 @@ export function Dashboard() {
                 </tr>
               )}
               {orders.map((order) => (
-                <tr key={order.id} className="border-b border-stone-100 last:border-0">
-                  <td className="px-4 py-3 text-stone-900">{order.customer_name}</td>
+                <tr
+                  key={order.id}
+                  className={`border-b border-stone-100 last:border-0 ${demoRowClass(order)}`}
+                >
+                  <td className="px-4 py-3 text-stone-900">
+                    {order.customer_name}
+                    {isDemoRecord(order) && <DemoBadge className="ml-2 align-middle" />}
+                  </td>
                   <td className="px-4 py-3 text-stone-600">
                     {order.artworkTitle ?? order.artwork_id}
                   </td>
@@ -154,8 +187,8 @@ export function Dashboard() {
           />
           <QuickAction
             to="/blog"
-            title="Write Blog Post"
-            description="Share updates about art fairs and drumming"
+            title="Notes & updates"
+            description="Add a date or a short post with photos or video"
           />
         </div>
       </section>
@@ -163,10 +196,25 @@ export function Dashboard() {
   )
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({
+  label,
+  value,
+  demoHint,
+}: {
+  label: string
+  value: string | number
+  demoHint?: boolean
+}) {
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
-      <p className="text-sm text-stone-500">{label}</p>
+    <div
+      className={`rounded-lg border border-stone-200 bg-white p-4 ${
+        demoHint ? 'opacity-75' : ''
+      }`}
+    >
+      <p className="text-sm text-stone-500">
+        {label}
+        {demoHint && <DemoBadge className="ml-2 align-middle" />}
+      </p>
       <p className="mt-1 text-2xl font-semibold text-stone-900">{value}</p>
     </div>
   )

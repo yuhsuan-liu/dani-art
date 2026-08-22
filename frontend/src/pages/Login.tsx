@@ -65,7 +65,7 @@ export function Login() {
         type="button"
         onClick={handleSignIn}
         disabled={signingIn}
-        className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg bg-white border border-stone-300 px-4 py-3 text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-60"
+        className="btn-b mt-8 w-full gap-3"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">
           <path

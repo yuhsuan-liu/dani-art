@@ -1,7 +1,8 @@
 # Dani's Art Registry - Product Requirements Document
 
 > **Project Type:** Gift project for artist friend Dani  
-> **Last Updated:** August 22, 2026, 1:05 AM EDT  
+> **Live Site:** https://yuhsuan-liu.github.io/dani-art/  
+> **Last Updated:** August 22, 2026, 1:58 AM EDT  
 > **Status:** Development Phase
 
 ---
@@ -370,26 +371,28 @@ An "art registry" web application that presents Dani's artwork for sale in a uni
 
 ### 4.3 Blog Flows
 
-#### UC-3.1: Dani Creates Blog Post
+The public blog is two stacked lists — not long-form articles.
+
+#### UC-3.1: Dani Adds a Calendar Date
 
 **Flow:**
-1. Navigate to Blog section in dashboard
-2. Click "New Post"
-3. Rich text editor with:
-   - Title
-   - Content (markdown or WYSIWYG)
-   - Featured image (optional)
-   - Category tags (Art Fair, Drumming Lessons, etc.)
-4. Save as draft or publish
-5. Posts appear on public blog page
+1. Open Blog from the nav
+2. In the calendar list, enter a date + a short line (e.g. 5/6 artfare at...)
+3. Date appears in month/day order
 
-#### UC-3.2: Customer Reads Blog
+#### UC-3.2: Dani Posts an Update
+
+**Flow:**
+1. On the same page, write a short note
+2. Optionally attach photos and/or video under the text
+3. Post — it shows in the tweet-style feed below the calendar (newest first)
+
+#### UC-3.3: Customer Reads Blog
 
 **Flow:**
 1. Navigate to Blog from main nav
-2. See list of posts (newest first)
-3. Click to read full post
-4. Share buttons (optional)
+2. See upcoming/past dates in a calendar list
+3. Scroll to short updates with photos and video
 
 ---
 
@@ -463,11 +466,12 @@ migrate to Option B if performance issues arise.
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
-| Create Post | Rich text editor | P1 |
-| Edit/Delete Post | Manage existing posts | P1 |
+| Calendar list | Date + one-line notes (`5/6 artfare at...`) | P1 |
+| Tweet-style updates | Short text with photos and/or video underneath | P1 |
+| Add/remove dates | Dani can add and remove calendar lines | P1 |
+| Compose update | Inline composer with photo/video attach | P1 |
+| Markdown long-form | Deferred — not in the minimal 3.3 | P3 |
 | Categories/Tags | Organize posts | P2 |
-| Image Upload | Embed images in posts | P1 |
-| Public Blog Page | List of published posts | P1 |
 
 ---
 
@@ -856,7 +860,7 @@ Since payments are external and not automatically verified:
 - [ ] Set up ESLint + Prettier
 - [x] Create folder structure — *Aug 22, 2026 12:00 AM*
 - [x] Set up GitHub repository — *Aug 22, 2026 12:02 AM*
-- [ ] Configure GitHub Pages deployment
+- [x] Configure GitHub Pages deployment — *Aug 22, 2026 1:58 AM*
 
 #### 1.2 Backend Setup
 - [x] Initialize FastAPI project — *Aug 22, 2026 12:00 AM*
@@ -931,9 +935,11 @@ Since payments are external and not automatically verified:
 - [ ] Batch edit capabilities
 
 #### 3.3 Blog
-- [ ] Blog post editor (Markdown)
-- [ ] Blog list page
-- [ ] Blog detail page
+- [x] Calendar list (`5/6 artfare at...`) — *Aug 22, 2026 1:15 AM*
+- [x] Tweet-style updates with photo/video — *Aug 22, 2026 1:15 AM*
+- [x] Inline composer for Dani — *Aug 22, 2026 1:15 AM*
+- [ ] Persist calendar + updates to backend
+- [ ] Markdown long-form / detail page (deferred)
 - [ ] Category filtering
 
 #### 3.4 Mobile Optimization
