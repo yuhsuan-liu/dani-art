@@ -1,4 +1,5 @@
 import { MOCK_FEATURED_ARTISTS } from '../data/mockArtists'
+import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
 import { supabase, isSupabaseConfigured } from './supabase'
 import { isUuid } from './utils'
 import type { User } from '../types'
@@ -56,7 +57,8 @@ export async function getArtists(): Promise<Artist[]> {
       .select('*')
       .eq('role', 'artist')
 
-    if (!error && data && data.length > 0) return data
+    if (!error && data) return data
+    if (!useMockFallback()) return []
   }
   return MOCK_FEATURED_ARTISTS.map((artist) => ({ ...artist }))
 }
@@ -93,7 +95,8 @@ export async function getArtist(idOrSlug: string): Promise<Artist | undefined> {
   }
 
   if (isDaniSlug(idOrSlug) || idOrSlug === mockDani().id) {
-    return mockDani()
+    if (useMockFallback() || usePublicDemoWhenEmpty(0)) return mockDani()
+    return undefined
   }
 
   const fromMock = MOCK_FEATURED_ARTISTS.find(
@@ -101,7 +104,8 @@ export async function getArtist(idOrSlug: string): Promise<Artist | undefined> {
       artist.id === idOrSlug ||
       artist.name.toLowerCase() === idOrSlug.toLowerCase(),
   )
-  return fromMock ? { ...fromMock } : isDaniSlug(idOrSlug) ? mockDani() : undefined
+  if (fromMock && useMockFallback()) return { ...fromMock }
+  return isDaniSlug(idOrSlug) && useMockFallback() ? mockDani() : undefined
 }
 
 export async function getFeaturedArtists(): Promise<Artist[]> {

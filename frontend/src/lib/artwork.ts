@@ -1,4 +1,5 @@
 import { fixDemoImageUrl, MOCK_ARTWORK } from '../data/mockRegistry'
+import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
 import { resolveArtistUserId } from './artists'
 import { supabase, isSupabaseConfigured } from './supabase'
 import type { Artwork } from '../types'
@@ -27,18 +28,30 @@ export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    if (!error && data && data.length > 0) {
-      return data.map((item) => ({
-        ...item,
-        image_url: fixDemoImageUrl(item.image_url),
-      }))
+    if (!error && data) {
+      if (data.length > 0) {
+        return data.map((item) => ({
+          ...item,
+          image_url: fixDemoImageUrl(item.image_url),
+        }))
+      }
+      if (usePublicDemoWhenEmpty(0)) {
+        return MOCK_ARTWORK.map((item) => ({
+          ...item,
+          image_url: fixDemoImageUrl(item.image_url),
+        }))
+      }
+      return []
     }
   }
 
-  return MOCK_ARTWORK.map((item) => ({
-    ...item,
-    image_url: fixDemoImageUrl(item.image_url),
-  }))
+  if (useMockFallback()) {
+    return MOCK_ARTWORK.map((item) => ({
+      ...item,
+      image_url: fixDemoImageUrl(item.image_url),
+    }))
+  }
+  return []
 }
 
 export async function getArtworkById(id: string): Promise<Artwork | undefined> {
@@ -55,7 +68,9 @@ export async function getArtworkById(id: string): Promise<Artwork | undefined> {
   }
 
   const mock = MOCK_ARTWORK.find((item) => item.id === id)
-  return mock ? { ...mock, image_url: fixDemoImageUrl(mock.image_url) } : undefined
+  return mock && useMockFallback()
+    ? { ...mock, image_url: fixDemoImageUrl(mock.image_url) }
+    : undefined
 }
 
 export async function createArtwork(draft: ArtworkDraft): Promise<Artwork> {

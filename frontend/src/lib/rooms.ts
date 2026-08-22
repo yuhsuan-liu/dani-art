@@ -1,4 +1,5 @@
 import { isDemoRecord, MOCK_FURNITURE, MOCK_ROOMS } from '../data/mockRegistry'
+import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
 import { resolveArtistUserId } from './artists'
 import { supabase, isSupabaseConfigured } from './supabase'
 import type { Furniture, Room } from '../types'
@@ -17,10 +18,14 @@ export async function getRoomsByArtist(userIdOrSlug: string): Promise<Room[]> {
       .eq('user_id', userId)
       .order('order')
 
-    if (!error && data && data.length > 0) return data
+    if (!error && data) {
+      if (data.length > 0) return data
+      if (usePublicDemoWhenEmpty(0)) return MOCK_ROOMS.map((room) => ({ ...room }))
+      return []
+    }
   }
 
-  return MOCK_ROOMS.map((room) => ({ ...room }))
+  return useMockFallback() ? MOCK_ROOMS.map((room) => ({ ...room })) : []
 }
 
 export async function createRoom(input: {
@@ -98,7 +103,9 @@ export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furnit
   if (rooms.length === 0) return []
 
   if (rooms.some(isDemoRecord)) {
-    return MOCK_FURNITURE.map((item) => ({ ...item }))
+    return useMockFallback() || usePublicDemoWhenEmpty(rooms.filter((r) => !isDemoRecord(r)).length)
+      ? MOCK_FURNITURE.map((item) => ({ ...item }))
+      : []
   }
 
   const roomIds = rooms.map((room) => room.id)
@@ -111,9 +118,12 @@ export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furnit
 
   if (error) {
     console.error('Error fetching furniture:', error)
-    return MOCK_FURNITURE.map((item) => ({ ...item }))
+    return useMockFallback() ? MOCK_FURNITURE.map((item) => ({ ...item })) : []
   }
-  return data && data.length > 0 ? data : MOCK_FURNITURE.map((item) => ({ ...item }))
+  if (!data || data.length === 0) {
+    return usePublicDemoWhenEmpty(0) ? MOCK_FURNITURE.map((item) => ({ ...item })) : []
+  }
+  return data
 }
 
 export type FurnitureDraft = {
