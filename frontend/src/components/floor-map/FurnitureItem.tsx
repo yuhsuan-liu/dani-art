@@ -116,14 +116,6 @@ export function FurnitureItem({
         ) : (
           <FurnitureSilhouette name={item.name} status={item.status} />
         )}
-        {!editMode && !sold && artwork?.image_url && (
-          <img
-            src={artwork.image_url}
-            alt=""
-            className="furn-art-preview"
-            draggable={false}
-          />
-        )}
       </div>
       <span className="furn-tag">
         {item.name} {sold ? 'Sold' : hold ? 'Hold' : formatPrice(item.price)}
