@@ -2,7 +2,7 @@
 
 > **Project Type:** Gift project for artist friend Dani  
 > **Live Site:** https://yuhsuan-liu.github.io/dani-art/  
-> **Last Updated:** August 22, 2026, 1:58 AM EDT  
+> **Last Updated:** August 22, 2026, 2:10 AM EDT  
 > **Status:** Development Phase
 
 ---
@@ -842,9 +842,11 @@ Since payments are external and not automatically verified:
 
 1. Customer completes order → status = "pending"
 2. Customer pays via Venmo/PayPal
-3. Dani sees order in dashboard
-4. Dani manually verifies payment received
-5. Dani clicks "Confirm Payment" → status = "confirmed"
+3. **Customer prints order receipt** (reminder shown on confirmation page)
+4. Dani sees order in dashboard / order management
+5. Dani **prints receipt for records** when confirming payment
+6. Dani manually verifies payment received
+7. Dani updates status → "confirmed"
 
 ---
 
@@ -927,34 +929,32 @@ Since payments are external and not automatically verified:
 #### 3.1 Order Management
 - [x] Order list view for Dani — *Aug 22, 2026 1:10 AM*
 - [x] Update order status — *Aug 22, 2026 1:10 AM*
-- [ ] Order notifications (email?)
+- [x] Printable order receipt + print reminder (customer & Dani) — *Aug 22, 2026 2:20 AM*
+- [~] Order email notifications — *skipped; use print receipt instead*
 
 #### 3.2 Bulk Art Upload
-- [ ] Multi-file select
-- [ ] Upload progress indicator
-- [ ] Batch edit capabilities
+- [~] *Skipped per product decision*
 
-#### 3.3 Blog
+#### 3.3 Notes & Feed (not a blog)
 - [x] Calendar list (`5/6 artfare at...`) — *Aug 22, 2026 1:15 AM*
 - [x] Tweet-style updates with photo/video — *Aug 22, 2026 1:15 AM*
 - [x] Inline composer for Dani — *Aug 22, 2026 1:15 AM*
-- [ ] Persist calendar + updates to backend
-- [ ] Markdown long-form / detail page (deferred)
-- [ ] Category filtering
+- [ ] Persist feed to Supabase / `GET /api/blog` on Render
+- [~] Long-form markdown — *out of scope*
 
 #### 3.4 Mobile Optimization
-- [ ] Touch-friendly floor map
-- [ ] Pinch-to-zoom
-- [ ] Responsive layouts
-- [ ] Mobile navigation
+- [x] Touch-friendly floor map — *Aug 22, 2026 2:10 AM*
+- [x] Pinch-to-zoom — *Aug 22, 2026 2:10 AM*
+- [x] Responsive layouts — *Aug 22, 2026 2:10 AM*
+- [x] Mobile navigation — *Aug 22, 2026 2:10 AM*
 
 #### 3.5 Final Polish
-- [ ] Loading states
-- [ ] Error handling
-- [ ] Empty states
+- [x] Loading states — *Aug 22, 2026 2:10 AM*
+- [x] Error handling — *Aug 22, 2026 2:10 AM*
+- [x] Empty states — *Aug 22, 2026 2:10 AM*
 - [ ] Animations/transitions
 - [ ] Performance optimization
-- [ ] SEO basics
+- [x] SEO basics — *Aug 22, 2026 2:10 AM*
 
 ---
 

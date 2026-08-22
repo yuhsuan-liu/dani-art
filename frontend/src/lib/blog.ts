@@ -10,13 +10,8 @@ let updateStore: UpdatePost[] = MOCK_UPDATES.map((item) => ({
 }))
 
 /**
- * Expected backend contract:
- *   GET    /blog/calendar          → CalendarEvent[]
- *   POST   /blog/calendar          → CalendarEvent
- *   DELETE /blog/calendar/:id      → void
- *   GET    /blog/updates           → UpdatePost[]
- *   POST   /blog/updates           → UpdatePost
- *   DELETE /blog/updates/:id       → void
+ * Notes feed (in-memory for now).
+ * Public posts will load from the backend later: GET /api/blog (calendar + updates).
  */
 
 export async function getCalendarEvents(): Promise<CalendarEvent[]> {
