@@ -30,8 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setLoading(false)
     }, 4000)
 
+    // Clean up OAuth callback params from URL to prevent issues with React Router
+    function cleanupAuthParams() {
+      const url = new URL(window.location.href)
+      if (url.searchParams.has('code') || url.searchParams.has('error')) {
+        url.searchParams.delete('code')
+        url.searchParams.delete('error')
+        url.searchParams.delete('error_description')
+        window.history.replaceState({}, '', url.pathname + url.hash)
+      }
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (cancelled) return
+      cleanupAuthParams()
       setSession(session)
       setSupabaseUser(session?.user ?? null)
       if (session?.user) {
@@ -44,8 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (cancelled) return
+        
+        // Clean up URL on successful sign in
+        if (event === 'SIGNED_IN') {
+          cleanupAuthParams()
+        }
+        
         setSession(session)
         setSupabaseUser(session?.user ?? null)
         if (session?.user) {
