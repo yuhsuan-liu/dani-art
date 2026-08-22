@@ -1,30 +1,26 @@
-import { MOCK_FURNITURE, MOCK_ROOMS } from '../data/mockRegistry'
-import { newId, wait } from './utils'
+import { isDemoRecord, MOCK_FURNITURE, MOCK_ROOMS } from '../data/mockRegistry'
+import { resolveArtistUserId } from './artists'
+import { supabase, isSupabaseConfigured } from './supabase'
 import type { Furniture, Room } from '../types'
-// import { apiRequest } from './api'
-
-let roomStore: Room[] = MOCK_ROOMS.map((item) => ({ ...item }))
-let furnitureStore: Furniture[] = MOCK_FURNITURE.map((item) => ({ ...item }))
 
 /**
- * Expected backend contract:
- *   GET    /artists/:id/rooms     → Room[]
- *   POST   /rooms                 → Room
- *   PATCH  /rooms/:id             → Room
- *   DELETE /rooms/:id             → void
- *   GET    /rooms/:id/furniture   → Furniture[]
- *   POST   /furniture             → Furniture
- *   PATCH  /furniture/:id         → Furniture
- *   DELETE /furniture/:id         → void
+ * Room and Furniture API using Supabase
  */
 
-export async function getRoomsByArtist(userId: string): Promise<Room[]> {
-  // return apiRequest<Room[]>(`/artists/${userId}/rooms`)
-  await wait()
-  const matched = roomStore.filter((room) => room.user_id === userId)
-  const rooms =
-    matched.length > 0 ? matched : roomStore.filter((room) => room.user_id === 'dani')
-  return rooms.sort((a, b) => a.order - b.order).map((room) => ({ ...room }))
+export async function getRoomsByArtist(userIdOrSlug: string): Promise<Room[]> {
+  const userId = await resolveArtistUserId(userIdOrSlug)
+
+  if (isSupabaseConfigured() && userId) {
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('user_id', userId)
+      .order('order')
+
+    if (!error && data && data.length > 0) return data
+  }
+
+  return MOCK_ROOMS.map((room) => ({ ...room }))
 }
 
 export async function createRoom(input: {
@@ -33,58 +29,91 @@ export async function createRoom(input: {
   width?: number
   height?: number
 }): Promise<Room> {
-  // return apiRequest<Room>('/rooms', { method: 'POST', body: JSON.stringify(input) })
-  await wait()
-  const maxOrder = roomStore
-    .filter((room) => room.user_id === input.user_id)
-    .reduce((max, room) => Math.max(max, room.order), -1)
-  const created: Room = {
-    id: newId('room'),
-    user_id: input.user_id,
-    name: input.name.trim() || 'New Room',
-    order: maxOrder + 1,
-    width: input.width ?? 800,
-    height: input.height ?? 560,
-    created_at: new Date().toISOString(),
-  }
-  roomStore = [...roomStore, created]
-  return { ...created }
+  // Get max order for this user's rooms
+  const { data: existing } = await supabase
+    .from('rooms')
+    .select('order')
+    .eq('user_id', input.user_id)
+    .order('order', { ascending: false })
+    .limit(1)
+
+  const maxOrder = existing?.[0]?.order ?? -1
+
+  const { data, error } = await supabase
+    .from('rooms')
+    .insert({
+      user_id: input.user_id,
+      name: input.name.trim() || 'New Room',
+      order: maxOrder + 1,
+      width: input.width ?? 800,
+      height: input.height ?? 560,
+    })
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
 export async function updateRoom(
   id: string,
   patch: Partial<Pick<Room, 'name' | 'order' | 'background_url' | 'width' | 'height'>>,
 ): Promise<Room> {
-  // return apiRequest<Room>(`/rooms/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
-  await wait()
-  const index = roomStore.findIndex((room) => room.id === id)
-  if (index === -1) throw new Error('Room not found')
-  const updated = { ...roomStore[index], ...patch }
-  roomStore[index] = updated
-  return { ...updated }
+  const { data, error } = await supabase
+    .from('rooms')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
 export async function deleteRoom(id: string): Promise<void> {
-  // await apiRequest<void>(`/rooms/${id}`, { method: 'DELETE' })
-  await wait()
-  roomStore = roomStore.filter((room) => room.id !== id)
-  furnitureStore = furnitureStore.filter((item) => item.room_id !== id)
+  const { error } = await supabase
+    .from('rooms')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
 }
 
 export async function getFurnitureByRoom(roomId: string): Promise<Furniture[]> {
-  // return apiRequest<Furniture[]>(`/rooms/${roomId}/furniture`)
-  await wait()
-  return furnitureStore
-    .filter((item) => item.room_id === roomId)
-    .map((item) => ({ ...item }))
+  const { data, error } = await supabase
+    .from('furniture')
+    .select('*, artwork(*)')
+    .eq('room_id', roomId)
+    .order('z_index')
+
+  if (error) {
+    console.error('Error fetching furniture:', error)
+    return []
+  }
+  return data ?? []
 }
 
-export async function getFurnitureByArtist(userId: string): Promise<Furniture[]> {
-  const rooms = await getRoomsByArtist(userId)
-  const roomIds = new Set(rooms.map((room) => room.id))
-  return furnitureStore
-    .filter((item) => roomIds.has(item.room_id))
-    .map((item) => ({ ...item }))
+export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furniture[]> {
+  const rooms = await getRoomsByArtist(userIdOrSlug)
+  if (rooms.length === 0) return []
+
+  if (rooms.some(isDemoRecord)) {
+    return MOCK_FURNITURE.map((item) => ({ ...item }))
+  }
+
+  const roomIds = rooms.map((room) => room.id)
+
+  const { data, error } = await supabase
+    .from('furniture')
+    .select('*, artwork(*)')
+    .in('room_id', roomIds)
+    .order('z_index')
+
+  if (error) {
+    console.error('Error fetching furniture:', error)
+    return MOCK_FURNITURE.map((item) => ({ ...item }))
+  }
+  return data && data.length > 0 ? data : MOCK_FURNITURE.map((item) => ({ ...item }))
 }
 
 export type FurnitureDraft = {
@@ -101,29 +130,38 @@ export type FurnitureDraft = {
 }
 
 export async function createFurniture(draft: FurnitureDraft): Promise<Furniture> {
-  // return apiRequest<Furniture>('/furniture', { method: 'POST', body: JSON.stringify(draft) })
-  await wait()
-  const now = new Date().toISOString()
-  const created: Furniture = {
-    id: newId('furn'),
-    room_id: draft.room_id,
-    name: draft.name.trim() || 'Untitled furniture',
-    image_url: draft.image_url,
-    price: draft.price,
-    position_x: draft.position_x ?? 80,
-    position_y: draft.position_y ?? 80,
-    width: draft.width ?? 140,
-    height: draft.height ?? 100,
-    rotation: 0,
-    z_index: furnitureStore.length + 1,
-    external_url: draft.external_url,
-    artwork_id: draft.artwork_id,
-    status: 'available',
-    created_at: now,
-    updated_at: now,
-  }
-  furnitureStore = [...furnitureStore, created]
-  return { ...created }
+  // Get max z_index
+  const { data: existing } = await supabase
+    .from('furniture')
+    .select('z_index')
+    .eq('room_id', draft.room_id)
+    .order('z_index', { ascending: false })
+    .limit(1)
+
+  const maxZIndex = existing?.[0]?.z_index ?? 0
+
+  const { data, error } = await supabase
+    .from('furniture')
+    .insert({
+      room_id: draft.room_id,
+      name: draft.name.trim() || 'Untitled furniture',
+      image_url: draft.image_url,
+      price: draft.price,
+      position_x: draft.position_x ?? 80,
+      position_y: draft.position_y ?? 80,
+      width: draft.width ?? 140,
+      height: draft.height ?? 100,
+      rotation: 0,
+      z_index: maxZIndex + 1,
+      external_url: draft.external_url || null,
+      artwork_id: draft.artwork_id || null,
+      status: 'available',
+    })
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
 export async function updateFurniture(
@@ -147,23 +185,24 @@ export async function updateFurniture(
     >
   >,
 ): Promise<Furniture> {
-  // return apiRequest<Furniture>(`/furniture/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
-  await wait()
-  const index = furnitureStore.findIndex((item) => item.id === id)
-  if (index === -1) throw new Error('Furniture not found')
-  const updated: Furniture = {
-    ...furnitureStore[index],
-    ...patch,
-    updated_at: new Date().toISOString(),
-  }
-  furnitureStore[index] = updated
-  return { ...updated }
+  const { data, error } = await supabase
+    .from('furniture')
+    .update(patch)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data
 }
 
 export async function deleteFurniture(id: string): Promise<void> {
-  // await apiRequest<void>(`/furniture/${id}`, { method: 'DELETE' })
-  await wait()
-  furnitureStore = furnitureStore.filter((item) => item.id !== id)
+  const { error } = await supabase
+    .from('furniture')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
 }
 
 export async function updateFurniturePosition(
@@ -171,6 +210,10 @@ export async function updateFurniturePosition(
   position_x: number,
   position_y: number,
 ): Promise<Furniture> {
-  // return apiRequest<Furniture>(`/furniture/${id}/position?position_x=${position_x}&position_y=${position_y}`, { method: 'PATCH' })
   return updateFurniture(id, { position_x, position_y })
+}
+
+/** Drop demo data (if any) - keeping for compatibility */
+export async function clearDemoRoomsAndFurniture(): Promise<void> {
+  // No-op for now - demo data is handled separately
 }

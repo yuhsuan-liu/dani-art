@@ -26,6 +26,10 @@ export const supabase = createClient<Database>(
   supabaseAnonKey || 'placeholder-key'
 )
 
+export function isSupabaseConfigured(): boolean {
+  return Boolean(supabaseUrl) && Boolean(supabaseAnonKey)
+}
+
 // Auth helpers
 export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({

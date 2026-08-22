@@ -1,31 +1,109 @@
 import { MOCK_FEATURED_ARTISTS } from '../data/mockArtists'
-import type { Artist } from '../types'
-// import { apiRequest } from './api'
+import { supabase, isSupabaseConfigured } from './supabase'
+import { isUuid } from './utils'
+import type { User } from '../types'
 
-/**
- * Featured artists for the homepage.
- *
- * Expected backend contract (to wire later):
- *   GET /artists          → Artist[]
- *   GET /artists/featured → Artist[]
- */
-export async function getFeaturedArtists(): Promise<Artist[]> {
-  // TODO: replace mock with backend call
-  // return apiRequest<Artist[]>('/artists')
+export type Artist = User
 
-  await new Promise((resolve) => setTimeout(resolve, 200))
-  return MOCK_FEATURED_ARTISTS
+export const DANI_SLUG = 'dani'
+
+function mockDani(): Artist {
+  return { ...MOCK_FEATURED_ARTISTS[0] }
 }
 
-export async function getArtist(id: string): Promise<Artist | undefined> {
-  // TODO: replace mock with backend call
-  // return apiRequest<Artist>(`/artists/${id}`)
+function isDaniSlug(idOrSlug: string): boolean {
+  const value = idOrSlug.trim().toLowerCase()
+  return value === DANI_SLUG || value === 'danny'
+}
 
-  const artists = await getFeaturedArtists()
-  const normalized = id.trim().toLowerCase()
-  return (
-    artists.find((artist) => artist.id === id) ??
-    artists.find((artist) => artist.name.toLowerCase() === normalized) ??
-    artists.find((artist) => artist.id === 'dani')
+/**
+ * Map a URL slug ("dani") or UUID to a users.id.
+ * Returns undefined when the live DB has no matching artist.
+ */
+export async function resolveArtistUserId(
+  idOrSlug: string,
+): Promise<string | undefined> {
+  if (isUuid(idOrSlug)) return idOrSlug
+  if (!isSupabaseConfigured()) return undefined
+
+  const { data: byName } = await supabase
+    .from('users')
+    .select('id')
+    .eq('role', 'artist')
+    .ilike('name', `%${idOrSlug}%`)
+    .limit(1)
+    .maybeSingle()
+
+  if (byName?.id) return byName.id
+
+  if (isDaniSlug(idOrSlug)) {
+    const { data: firstArtist } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'artist')
+      .limit(1)
+      .maybeSingle()
+    return firstArtist?.id
+  }
+
+  return undefined
+}
+
+export async function getArtists(): Promise<Artist[]> {
+  if (isSupabaseConfigured()) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('role', 'artist')
+
+    if (!error && data && data.length > 0) return data
+  }
+  return MOCK_FEATURED_ARTISTS.map((artist) => ({ ...artist }))
+}
+
+export async function getArtist(idOrSlug: string): Promise<Artist | undefined> {
+  if (isSupabaseConfigured()) {
+    if (isUuid(idOrSlug)) {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', idOrSlug)
+        .maybeSingle()
+      if (data) return data
+    } else {
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'artist')
+        .ilike('name', `%${idOrSlug}%`)
+        .limit(1)
+        .maybeSingle()
+      if (data) return data
+
+      const userId = await resolveArtistUserId(idOrSlug)
+      if (userId && isUuid(userId)) {
+        const { data: byId } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle()
+        if (byId) return byId
+      }
+    }
+  }
+
+  if (isDaniSlug(idOrSlug) || idOrSlug === mockDani().id) {
+    return mockDani()
+  }
+
+  const fromMock = MOCK_FEATURED_ARTISTS.find(
+    (artist) =>
+      artist.id === idOrSlug ||
+      artist.name.toLowerCase() === idOrSlug.toLowerCase(),
   )
+  return fromMock ? { ...fromMock } : isDaniSlug(idOrSlug) ? mockDani() : undefined
+}
+
+export async function getFeaturedArtists(): Promise<Artist[]> {
+  return getArtists()
 }
