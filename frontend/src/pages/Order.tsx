@@ -181,31 +181,51 @@ export function OrderPage() {
 
       {/* Payment method selection */}
       {step === 'form' && (
-        <div className="mb-6">
-          <h3 className="font-medium text-stone-900 mb-3">Payment Method</h3>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('venmo')}
-              className={`flex-1 rounded-lg border p-3 ${
-                paymentMethod === 'venmo'
-                  ? 'border-stone-900 bg-stone-50'
-                  : 'border-stone-200 hover:border-stone-300'
-              }`}
-            >
-              Venmo
-            </button>
-            <button
-              type="button"
-              onClick={() => setPaymentMethod('paypal')}
-              className={`flex-1 rounded-lg border p-3 ${
-                paymentMethod === 'paypal'
-                  ? 'border-stone-900 bg-stone-50'
-                  : 'border-stone-200 hover:border-stone-300'
-              }`}
-            >
-              PayPal
-            </button>
+        <div className="mb-6 space-y-4">
+          <div>
+            <h3 className="font-medium text-stone-900 mb-3">Payment Method</h3>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('venmo')}
+                className={`flex-1 rounded-lg border p-3 ${
+                  paymentMethod === 'venmo'
+                    ? 'border-stone-900 bg-stone-50'
+                    : 'border-stone-200 hover:border-stone-300'
+                }`}
+              >
+                Venmo
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('paypal')}
+                className={`flex-1 rounded-lg border p-3 ${
+                  paymentMethod === 'paypal'
+                    ? 'border-stone-900 bg-stone-50'
+                    : 'border-stone-200 hover:border-stone-300'
+                }`}
+              >
+                PayPal
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
+            <p className="font-medium text-stone-900">Pay the artist directly</p>
+            {artistPayment.venmo_handle ? (
+              <p className="mt-2">
+                Venmo: <span className="font-mono">@{artistPayment.venmo_handle}</span>
+              </p>
+            ) : (
+              <p className="mt-2 text-stone-500">Venmo: not set by artist yet</p>
+            )}
+            {artistPayment.paypal_email ? (
+              <p className="mt-1">
+                PayPal: <span className="font-mono">{artistPayment.paypal_email}</span>
+              </p>
+            ) : (
+              <p className="mt-1 text-stone-500">PayPal: not set by artist yet</p>
+            )}
           </div>
         </div>
       )}

@@ -47,6 +47,23 @@ export async function deleteCalendarEvent(id: string): Promise<void> {
   calendarStore = calendarStore.filter((item) => item.id !== id)
 }
 
+export async function updateCalendarEvent(
+  id: string,
+  patch: { date?: string; title?: string },
+): Promise<CalendarEvent> {
+  await wait()
+  const index = calendarStore.findIndex((item) => item.id === id)
+  if (index === -1) throw new Error('Event not found')
+  const updated: CalendarEvent = {
+    ...calendarStore[index],
+    ...patch,
+    title: patch.title?.trim() ?? calendarStore[index].title,
+    updated_at: new Date().toISOString(),
+  }
+  calendarStore = calendarStore.map((item) => (item.id === id ? updated : item))
+  return { ...updated }
+}
+
 export async function getUpdates(): Promise<UpdatePost[]> {
   await wait()
   return updateStore
@@ -84,6 +101,26 @@ export async function createUpdate(input: {
 export async function deleteUpdate(id: string): Promise<void> {
   await wait()
   updateStore = updateStore.filter((item) => item.id !== id)
+}
+
+export async function updateUpdate(
+  id: string,
+  patch: { text?: string; media?: MediaItem[] },
+): Promise<UpdatePost> {
+  await wait()
+  const index = updateStore.findIndex((item) => item.id === id)
+  if (index === -1) throw new Error('Post not found')
+  const updated: UpdatePost = {
+    ...updateStore[index],
+    text: patch.text?.trim() ?? updateStore[index].text,
+    media: patch.media ?? updateStore[index].media,
+    updated_at: new Date().toISOString(),
+  }
+  updateStore = updateStore.map((item) => (item.id === id ? updated : item))
+  return {
+    ...updated,
+    media: updated.media.map((media) => ({ ...media })),
+  }
 }
 
 export async function clearDemoBlog(): Promise<void> {

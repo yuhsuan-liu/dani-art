@@ -26,6 +26,11 @@ export function Header() {
           Reports
         </NavLink>
       )}
+      {isAuthenticated && isArtist && (
+        <NavLink to="/settings" className={navLinkClass} onClick={() => setMenuOpen(false)}>
+          Settings
+        </NavLink>
+      )}
     </>
   )
 

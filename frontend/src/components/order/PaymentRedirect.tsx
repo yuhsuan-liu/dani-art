@@ -74,8 +74,20 @@ export function PaymentRedirect({
         <p className="text-sm text-stone-600 mt-1">
           <strong>For:</strong> {artworkTitle}
         </p>
+        <p className="text-sm text-stone-900 mt-3 font-medium">
+          Send payment to:
+        </p>
+        {paymentMethod === 'venmo' ? (
+          <p className="text-sm text-stone-700 mt-1 font-mono">
+            @{recipientVenmo}
+          </p>
+        ) : (
+          <p className="text-sm text-stone-700 mt-1 font-mono">
+            {recipientPaypal}
+          </p>
+        )}
         <p className="text-sm text-stone-500 mt-2">
-          After payment, return to this page to see your confirmation.
+          After payment, return to this page and tap “I've Paid”.
         </p>
       </div>
 

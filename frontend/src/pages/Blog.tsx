@@ -10,6 +10,8 @@ import {
   deleteUpdate,
   getCalendarEvents,
   getUpdates,
+  updateCalendarEvent,
+  updateUpdate,
 } from '../lib/blog'
 import { uploadMedia } from '../lib/storage'
 import type { CalendarEvent, UpdatePost } from '../types'
@@ -20,14 +22,14 @@ const DEFAULT_AUTHOR: FeedAuthor = {
 }
 
 export function Blog() {
-  const { user } = useAuth()
+  const { user, isArtist } = useAuth()
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [posts, setPosts] = useState<UpdatePost[]>([])
   const [author, setAuthor] = useState(DEFAULT_AUTHOR)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const canEdit = true
+  const canEdit = isArtist
   const artistId = user?.id ?? 'dani'
 
   async function refresh() {
@@ -83,6 +85,10 @@ export function Blog() {
               await createCalendarEvent({ user_id: artistId, date, title })
               await refresh()
             }}
+            onEdit={async (event, input) => {
+              await updateCalendarEvent(event.id, input)
+              await refresh()
+            }}
             onDelete={async (event) => {
               await deleteCalendarEvent(event.id)
               await refresh()
@@ -101,6 +107,10 @@ export function Blog() {
                 }),
               )
               await createUpdate({ user_id: artistId, text, media })
+              await refresh()
+            }}
+            onEdit={async (post, input) => {
+              await updateUpdate(post.id, { text: input.text })
               await refresh()
             }}
             onDelete={async (post) => {

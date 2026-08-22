@@ -21,10 +21,25 @@ type Props = {
   canEdit: boolean
   author: FeedAuthor
   onCreate: (input: { text: string; files: File[] }) => Promise<void>
+  onEdit: (post: UpdatePost, input: { text: string }) => Promise<void>
   onDelete: (post: UpdatePost) => Promise<void>
 }
 
-export function UpdateFeed({ posts, canEdit, author, onCreate, onDelete }: Props) {
+export function UpdateFeed({ posts, canEdit, author, onCreate, onEdit, onDelete }: Props) {
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSaveEdit(post: UpdatePost) {
+    setSaving(true)
+    try {
+      await onEdit(post, { text: editText })
+      setEditingId(null)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <section className="space-y-3">
       {canEdit && <UpdateComposer author={author} onCreate={onCreate} />}
@@ -35,30 +50,68 @@ export function UpdateFeed({ posts, canEdit, author, onCreate, onDelete }: Props
 
       {posts.map((post) => (
         <article key={post.id} className="group frame-inset">
-          <ThreadAuthor
-            name={author.name}
-            username={author.username}
-            photoUrl={author.photoUrl}
-            time={formatDate(post.created_at)}
-          >
-            {post.text && (
-              <p className="mt-2 whitespace-pre-wrap text-stone-900">{post.text}</p>
-            )}
-            {post.media.length > 0 && (
-              <MediaGrid media={post.media} className="mt-3" />
-            )}
-            {canEdit && (
-              <div className="mt-3 flex justify-end">
+          {editingId === post.id ? (
+            <div className="space-y-3">
+              <textarea
+                value={editText}
+                onChange={(event) => setEditText(event.target.value)}
+                rows={3}
+                className="input-line w-full"
+              />
+              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => onDelete(post)}
-                  className="btn-c opacity-0 group-hover:opacity-100"
+                  disabled={saving}
+                  onClick={() => handleSaveEdit(post)}
+                  className="btn-a"
                 >
-                  remove
+                  {saving ? 'saving…' : 'save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  className="btn-c"
+                >
+                  cancel
                 </button>
               </div>
-            )}
-          </ThreadAuthor>
+            </div>
+          ) : (
+            <ThreadAuthor
+              name={author.name}
+              username={author.username}
+              photoUrl={author.photoUrl}
+              time={formatDate(post.created_at)}
+            >
+              {post.text && (
+                <p className="mt-2 whitespace-pre-wrap text-stone-900">{post.text}</p>
+              )}
+              {post.media.length > 0 && (
+                <MediaGrid media={post.media} className="mt-3" />
+              )}
+              {canEdit && (
+                <div className="mt-3 flex justify-end gap-2 opacity-0 group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(post.id)
+                      setEditText(post.text)
+                    }}
+                    className="btn-c"
+                  >
+                    edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(post)}
+                    className="btn-c"
+                  >
+                    remove
+                  </button>
+                </div>
+              )}
+            </ThreadAuthor>
+          )}
         </article>
       ))}
     </section>
