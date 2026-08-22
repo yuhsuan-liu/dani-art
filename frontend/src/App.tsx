@@ -7,8 +7,9 @@ import { Blog } from './pages/Blog'
 import { Dashboard } from './pages/Dashboard'
 import { Home } from './pages/Home'
 import { Login } from './pages/Login'
+import { OrderPage } from './pages/Order'
+import { OrderManagement } from './pages/OrderManagement'
 
-/** Vite BASE_URL is `/` in dev and `/dani_art/` in production builds. */
 const basename =
   import.meta.env.BASE_URL === '/'
     ? undefined
@@ -20,13 +21,18 @@ export default function App() {
       <BrowserRouter basename={basename}>
         <Routes>
           <Route element={<Layout />}>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/artists/:artistId" element={<Artist />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/login" element={<Login />} />
-            {/* Public for local verify until OAuth is required again */}
-            <Route path="/manage/art" element={<ArtManagement />} />
+            <Route path="/order/:artworkId" element={<OrderPage />} />
+            
+            {/* Artist/Admin routes */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/manage/art" element={<ArtManagement />} />
+            <Route path="/manage/orders" element={<OrderManagement />} />
+            
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

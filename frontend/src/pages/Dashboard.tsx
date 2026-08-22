@@ -136,7 +136,7 @@ export function Dashboard() {
 
       <section>
         <h2 className="mb-3 font-serif text-xl text-stone-900">Quick actions</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <QuickAction
             to={`/artists/${artistId}`}
             title="View Floor Map"
@@ -146,6 +146,11 @@ export function Dashboard() {
             to="/manage/art"
             title="Manage Artwork"
             description="Upload, edit, and delete pieces"
+          />
+          <QuickAction
+            to="/manage/orders"
+            title="Manage Orders"
+            description="View and update customer orders"
           />
           <QuickAction
             to="/blog"

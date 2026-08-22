@@ -904,25 +904,25 @@ Since payments are external and not automatically verified:
 - [x] Room switching — *Aug 22, 2026 1:05 AM*
 
 #### 2.3 Customer Order Flow
-- [ ] Order form UI
-- [ ] Delivery option selection
-- [ ] Shipping address form
-- [ ] Venmo/PayPal redirect
-- [ ] Confirmation page
-- [ ] Order creates in database
+- [x] Order form UI — *Aug 22, 2026 1:10 AM*
+- [x] Delivery option selection — *Aug 22, 2026 1:10 AM*
+- [x] Shipping address form — *Aug 22, 2026 1:10 AM*
+- [x] Venmo/PayPal redirect — *Aug 22, 2026 1:10 AM*
+- [x] Confirmation page — *Aug 22, 2026 1:10 AM*
+- [x] Order creates in database — *Aug 22, 2026 1:10 AM*
 
 #### 2.4 Dashboard
 - [x] Sales summary widgets — *Aug 22, 2026 1:05 AM*
 - [x] Recent orders list — *Aug 22, 2026 1:05 AM*
-- [x] Quick action links — *Aug 22, 2026 1:05 AM*
+- [x] Quick action links — *Aug 22, 2026 1:10 AM*
 
 ### Phase 3: Polish & Additional Features
 
 > **Goal:** Complete experience, blog, mobile optimization
 
 #### 3.1 Order Management
-- [ ] Order list view for Dani
-- [ ] Update order status
+- [x] Order list view for Dani — *Aug 22, 2026 1:10 AM*
+- [x] Update order status — *Aug 22, 2026 1:10 AM*
 - [ ] Order notifications (email?)
 
 #### 3.2 Bulk Art Upload

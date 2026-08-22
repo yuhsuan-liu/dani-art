@@ -16,15 +16,6 @@ export function Header() {
           Dani's Art Registry
         </Link>
         <nav className="flex items-center gap-5">
-          <NavLink to="/artists/dani" className={navLinkClass}>
-            Floor Map
-          </NavLink>
-          <NavLink to="/manage/art" className={navLinkClass}>
-            Manage Art
-          </NavLink>
-          <NavLink to="/dashboard" className={navLinkClass}>
-            Dashboard
-          </NavLink>
           <NavLink to="/blog" className={navLinkClass}>
             Blog
           </NavLink>
@@ -32,13 +23,24 @@ export function Header() {
           {loading ? (
             <span className="text-sm text-stone-400">...</span>
           ) : isAuthenticated && isArtist ? (
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="text-sm text-stone-500 hover:text-stone-900"
-            >
-              Sign Out
-            </button>
+            <>
+              <NavLink to="/dashboard" className={navLinkClass}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/manage/art" className={navLinkClass}>
+                Art
+              </NavLink>
+              <NavLink to="/manage/orders" className={navLinkClass}>
+                Orders
+              </NavLink>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="text-sm text-stone-500 hover:text-stone-900"
+              >
+                Sign Out
+              </button>
+            </>
           ) : isAuthenticated ? (
             <>
               <span className="text-sm text-stone-500">Hi, {user?.name}</span>
