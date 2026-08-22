@@ -120,3 +120,18 @@ export async function getArtist(idOrSlug: string): Promise<Artist | undefined> {
 export async function getFeaturedArtists(): Promise<Artist[]> {
   return getArtists()
 }
+
+/**
+ * Which artist registry the logged-in user manages.
+ * Artists manage their own; admins manage Dani's gallery on this site.
+ */
+export async function getManagedArtistId(
+  user: User | null | undefined,
+): Promise<string> {
+  if (user?.role === 'artist') return user.id
+  if (user?.role === 'admin') {
+    const daniId = await resolveArtistUserId(DANI_SLUG)
+    if (daniId) return daniId
+  }
+  return user?.id ?? DANI_SLUG
+}
