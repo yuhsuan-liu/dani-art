@@ -32,6 +32,11 @@ export function isSupabaseConfigured(): boolean {
 
 // Auth helpers
 export async function signInWithGoogle() {
+  if (!isSupabaseConfigured()) {
+    throw new Error(
+      'Sign-in is not configured on this site yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to GitHub Actions secrets, then redeploy.',
+    )
+  }
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {

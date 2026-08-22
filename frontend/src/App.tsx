@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { Layout } from './components/common/Layout'
+import { ProtectedRoute } from './components/common/ProtectedRoute'
 import { ArtManagement } from './pages/ArtManagement'
 import { Artist } from './pages/Artist'
 import { Blog } from './pages/Blog'
@@ -28,10 +29,12 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/order/:artworkId" element={<OrderPage />} />
             
-            {/* Artist/Admin routes */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/manage/art" element={<ArtManagement />} />
-            <Route path="/manage/orders" element={<OrderManagement />} />
+            {/* Artist routes — login required */}
+            <Route element={<ProtectedRoute requireArtist />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/manage/art" element={<ArtManagement />} />
+              <Route path="/manage/orders" element={<OrderManagement />} />
+            </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

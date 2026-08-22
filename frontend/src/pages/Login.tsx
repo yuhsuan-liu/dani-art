@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
 export function Login() {
@@ -7,12 +9,14 @@ export function Login() {
   const [error, setError] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const nextPath = searchParams.get('next') || '/dashboard'
 
   useEffect(() => {
     if (!loading && user && isArtist) {
-      navigate('/dashboard')
+      navigate(nextPath)
     }
-  }, [user, isArtist, loading, navigate])
+  }, [user, isArtist, loading, navigate, nextPath])
 
   async function handleSignIn() {
     setError(null)
@@ -26,11 +30,7 @@ export function Login() {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-stone-500">Loading...</div>
-      </div>
-    )
+    return <LoadingSpinner label="Loading…" />
   }
 
   if (user && !isArtist) {
@@ -50,10 +50,19 @@ export function Login() {
 
   return (
     <div className="mx-auto max-w-md px-4 py-16 text-center">
-      <h1 className="font-serif text-3xl text-stone-900">Artist Login</h1>
+      <h1 className="font-serif text-3xl text-stone-900">Login</h1>
       <p className="mt-4 text-stone-600">
         Sign in with your Google account to manage your art registry.
       </p>
+
+      {!isSupabaseConfigured() && (
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-left text-sm text-amber-900">
+          <strong>Login unavailable on this deploy.</strong> GitHub Pages needs{' '}
+          <code className="text-xs">VITE_SUPABASE_URL</code> and{' '}
+          <code className="text-xs">VITE_SUPABASE_ANON_KEY</code> in repository secrets, then a
+          new deploy.
+        </div>
+      )}
 
       {error && (
         <div className="mt-4 rounded-lg bg-red-50 p-3 text-red-700 text-sm">
@@ -64,7 +73,7 @@ export function Login() {
       <button
         type="button"
         onClick={handleSignIn}
-        disabled={signingIn}
+        disabled={signingIn || !isSupabaseConfigured()}
         className="btn-b mt-8 w-full gap-3"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">

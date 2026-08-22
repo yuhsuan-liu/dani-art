@@ -1,4 +1,5 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { LoadingSpinner } from './LoadingSpinner'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface ProtectedRouteProps {
@@ -8,17 +9,14 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ requireAdmin = false, requireArtist = true }: ProtectedRouteProps) {
   const { isAuthenticated, isAdmin, isArtist, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-stone-500">Loading...</div>
-      </div>
-    )
+    return <LoadingSpinner label="Checking sign-in…" />
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />
   }
 
   if (requireAdmin && !isAdmin) {
