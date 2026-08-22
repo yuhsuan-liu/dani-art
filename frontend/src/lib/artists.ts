@@ -38,31 +38,37 @@ export async function resolveArtistUserId(
     return undefined
   }
 
-  const { data: byName, error: nameError } = await supabase
-    .from('users')
-    .select('id')
-    .eq('role', 'artist')
-    .ilike('name', `%${idOrSlug}%`)
-    .limit(1)
-    .maybeSingle()
-
-  console.log('[artists] Query by name result:', byName, 'error:', nameError?.message)
-
-  if (byName?.id) return byName.id
-
-  if (isDaniSlug(idOrSlug)) {
-    console.log('[artists] Trying to find any artist (dani slug fallback)')
-    const { data: firstArtist, error: artistError } = await supabase
+  try {
+    console.log('[artists] Making Supabase query...')
+    const { data: byName, error: nameError } = await supabase
       .from('users')
       .select('id')
       .eq('role', 'artist')
+      .ilike('name', `%${idOrSlug}%`)
       .limit(1)
       .maybeSingle()
-    console.log('[artists] First artist result:', firstArtist, 'error:', artistError?.message)
-    return firstArtist?.id
-  }
 
-  return undefined
+    console.log('[artists] Query by name result:', byName, 'error:', nameError?.message)
+
+    if (byName?.id) return byName.id
+
+    if (isDaniSlug(idOrSlug)) {
+      console.log('[artists] Trying to find any artist (dani slug fallback)')
+      const { data: firstArtist, error: artistError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'artist')
+        .limit(1)
+        .maybeSingle()
+      console.log('[artists] First artist result:', firstArtist, 'error:', artistError?.message)
+      return firstArtist?.id
+    }
+
+    return undefined
+  } catch (err) {
+    console.error('[artists] CAUGHT ERROR:', err)
+    return undefined
+  }
 }
 
 export async function getArtists(): Promise<Artist[]> {

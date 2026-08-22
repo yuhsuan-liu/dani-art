@@ -4,6 +4,10 @@ import type { User, Artwork, Room, Furniture, Order, BlogPost } from '../types'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// Debug: Show what Supabase URL is configured
+console.log('[supabase] URL configured:', supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'NOT SET')
+console.log('[supabase] Key configured:', supabaseAnonKey ? 'YES (length: ' + supabaseAnonKey.length + ')' : 'NOT SET')
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env')
 }
