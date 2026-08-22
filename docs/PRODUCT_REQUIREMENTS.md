@@ -1,23 +1,68 @@
 # Dani's Art Registry - Product Requirements Document
 
 > **Project Type:** Gift project for artist friend Dani  
-> **Last Updated:** August 21, 2026  
-> **Status:** Planning Phase
+> **Last Updated:** August 22, 2026  
+> **Status:** Development Phase
 
 ---
 
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
-2. [Tech Stack](#2-tech-stack)
-3. [User Roles & Personas](#3-user-roles--personas)
-4. [Use Cases & User Flows](#4-use-cases--user-flows)
-5. [Feature Specifications](#5-feature-specifications)
-6. [Data Models](#6-data-models)
-7. [UI/UX Guidelines](#7-uiux-guidelines)
-8. [Payment & Shipping Logic](#8-payment--shipping-logic)
-9. [Development Phases](#9-development-phases)
-10. [Setup & Deployment Guide](#10-setup--deployment-guide)
+2. [System Architecture](#2-system-architecture)
+3. [Tech Stack](#3-tech-stack)
+4. [User Roles & Personas](#4-user-roles--personas)
+5. [Use Cases & User Flows](#5-use-cases--user-flows)
+6. [Feature Specifications](#6-feature-specifications)
+7. [Data Models](#7-data-models)
+8. [UI/UX Guidelines](#8-uiux-guidelines)
+9. [Payment & Shipping Logic](#9-payment--shipping-logic)
+10. [Development Phases](#10-development-phases)
+11. [Setup & Deployment Guide](#11-setup--deployment-guide)
+
+---
+
+## 2. System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React)                         │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐       │
+│  │ AuthContext   │  │ Pages         │  │ Components    │       │
+│  │ (Google Auth) │  │ - Dashboard   │  │ - Header      │       │
+│  │               │  │ - Login       │  │ - Protected   │       │
+│  └───────┬───────┘  │ - Artist      │  │   Route       │       │
+│          │          └───────────────┘  └───────────────┘       │
+│          ▼                                                      │
+│  ┌───────────────┐                                              │
+│  │ Supabase JS   │ ◄─── Auth + Realtime Database Access        │
+│  └───────┬───────┘                                              │
+└──────────┼──────────────────────────────────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                     SUPABASE (Cloud)                             │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │ PostgreSQL  │  │ Auth        │  │ Storage     │              │
+│  │ - artists   │  │ - Google    │  │ - artwork   │              │
+│  │ - rooms     │  │   OAuth     │  │ - furniture │              │
+│  │ - furniture │  │             │  │ - profiles  │              │
+│  │ - artwork   │  │             │  │ - blog      │              │
+│  │ - orders    │  │             │  │             │              │
+│  │ - blog_posts│  │             │  │             │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+└──────────────────────────────────────────────────────────────────┘
+           ▲
+           │
+┌──────────┼──────────────────────────────────────────────────────┐
+│          │              BACKEND (FastAPI)                        │
+│  ┌───────┴───────┐                                              │
+│  │ Supabase      │  API Routes:                                 │
+│  │ Service Key   │  /api/artists, /api/artwork, /api/rooms,     │
+│  │ (full access) │  /api/furniture, /api/orders                 │
+│  └───────────────┘                                              │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -806,38 +851,38 @@ Since payments are external and not automatically verified:
 > **Goal:** Basic working app with core floor map functionality
 
 #### 1.1 Project Setup
-- [x] Initialize React + TypeScript + Vite project
-- [x] Set up TailwindCSS
+- [x] Initialize React + TypeScript + Vite project — *Aug 22, 2026 12:00 AM*
+- [x] Set up TailwindCSS — *Aug 22, 2026 12:00 AM*
 - [ ] Set up ESLint + Prettier
-- [x] Create folder structure
-- [x] Set up GitHub repository
+- [x] Create folder structure — *Aug 22, 2026 12:00 AM*
+- [x] Set up GitHub repository — *Aug 22, 2026 12:02 AM*
 - [ ] Configure GitHub Pages deployment
 
 #### 1.2 Backend Setup
-- [x] Initialize FastAPI project
-- [ ] Set up Supabase project
-- [ ] Configure Supabase Auth (Google OAuth)
-- [ ] Create database tables (migrations)
-- [ ] Set up Supabase Storage buckets
+- [x] Initialize FastAPI project — *Aug 22, 2026 12:00 AM*
+- [x] Set up Supabase project — *Aug 22, 2026 12:08 AM*
+- [x] Configure Supabase Auth (Google OAuth) — *Aug 22, 2026 12:19 AM*
+- [x] Create database tables (migrations) — *Aug 22, 2026 12:12 AM*
+- [x] Set up Supabase Storage buckets — *Aug 22, 2026 12:12 AM*
 - [ ] Deploy to Render
 
 #### 1.3 Authentication
-- [ ] Implement Google OAuth flow
-- [ ] Create protected routes (Dani's pages)
-- [ ] Public vs authenticated route handling
+- [x] Implement Google OAuth flow — *Aug 22, 2026 12:22 AM*
+- [x] Create protected routes (Dani's pages) — *Aug 22, 2026 12:22 AM*
+- [x] Public vs authenticated route handling — *Aug 22, 2026 12:22 AM*
 
 #### 1.4 Basic Floor Map (View Only)
-- [ ] Create room canvas component
-- [ ] Render furniture items from database
-- [ ] Implement furniture hover states
-- [ ] Implement furniture click → art modal
-- [ ] Art detail modal display
+- [x] Create room canvas component
+- [x] Render furniture items from database
+- [x] Implement furniture hover states
+- [x] Implement furniture click → art modal
+- [x] Art detail modal display
 
 #### 1.5 Basic Art Management
-- [ ] Art upload form (single)
-- [ ] Art list table view
-- [ ] Edit art details
-- [ ] Delete art
+- [x] Art upload form (single)
+- [x] Art list table view
+- [x] Edit art details
+- [x] Delete art
 
 ### Phase 2: Interactive Features
 

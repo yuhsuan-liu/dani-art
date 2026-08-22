@@ -21,12 +21,12 @@ export function Home() {
               lamp, and the rest of the room.
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
-              <a
-                href="#featured-artists"
+              <Link
+                to="/artists/dani"
                 className="inline-flex w-full items-center justify-center rounded-lg bg-stone-900 px-6 py-3 text-white hover:bg-stone-800 sm:w-auto"
               >
                 Get Started
-              </a>
+              </Link>
               <Link
                 to="/blog"
                 className="inline-flex w-full items-center justify-center rounded-lg border border-stone-300 px-6 py-3 text-stone-700 hover:bg-stone-50 sm:w-auto"

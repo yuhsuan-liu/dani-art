@@ -22,5 +22,10 @@ export async function getArtist(id: string): Promise<Artist | undefined> {
   // return apiRequest<Artist>(`/artists/${id}`)
 
   const artists = await getFeaturedArtists()
-  return artists.find((artist) => artist.id === id)
+  const normalized = id.trim().toLowerCase()
+  return (
+    artists.find((artist) => artist.id === id) ??
+    artists.find((artist) => artist.name.toLowerCase() === normalized) ??
+    artists.find((artist) => artist.id === 'dani')
+  )
 }
