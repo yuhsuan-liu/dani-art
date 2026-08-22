@@ -5,6 +5,8 @@ import { ArtDetailModal } from '../components/art/ArtDetailModal'
 import { ArtGridView } from '../components/art/ArtGridView'
 import { ArtListView } from '../components/art/ArtListView'
 import { DemoDataBanner } from '../components/common/DemoBadge'
+import { ErrorAlert } from '../components/common/ErrorAlert'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { ViewSwitch } from '../components/common/ViewSwitch'
 import { useAuth } from '../contexts/AuthContext'
 import { EditModeToolbar } from '../components/floor-map/EditModeToolbar'
@@ -180,13 +182,24 @@ export function Artist() {
   }
 
   if (loading) {
-    return <p className="px-4 py-16 text-center text-stone-500">Loading…</p>
+    return <LoadingSpinner label="Loading artist…" />
   }
   if (error || !artist) {
     return (
-      <p className="px-4 py-16 text-center text-red-600">
-        {error ?? 'Artist not found'}
-      </p>
+      <div className="mx-auto max-w-lg px-4 py-16">
+        <ErrorAlert
+          message={error ?? 'Artist not found'}
+          onRetry={() => {
+            setError(null)
+            setLoading(true)
+            refresh()
+              .catch((err: unknown) =>
+                setError(err instanceof Error ? err.message : 'Could not load artist'),
+              )
+              .finally(() => setLoading(false))
+          }}
+        />
+      </div>
     )
   }
 

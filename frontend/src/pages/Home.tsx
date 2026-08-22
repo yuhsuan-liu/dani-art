@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FeaturedWork, HeroArtGrid } from '../components/home/FeaturedWork'
-import { HeroRoomPreview } from '../components/home/HeroRoomPreview'
 import { HowItWorks } from '../components/home/HowItWorks'
 import { getArtworkByArtist } from '../lib/artwork'
 import type { Artwork } from '../types'
@@ -64,15 +63,11 @@ export function Home() {
               Browse the registry →
             </Link>
           </div>
-          {portrait ? (
-            <img
-              src={portrait.image_url}
-              alt={portrait.title}
-              className="mx-auto w-full max-w-md rounded-3xl object-cover"
-            />
-          ) : (
-            <HeroRoomPreview />
-          )}
+          <img
+            src={portrait?.image_url || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800"}
+            alt={portrait?.title || "Cozy furniture"}
+            className="mx-auto w-full max-w-md rounded-3xl object-cover aspect-[4/3]"
+          />
         </div>
       </section>
     </>

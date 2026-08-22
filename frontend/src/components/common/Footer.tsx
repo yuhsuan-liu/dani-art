@@ -1,5 +1,3 @@
-import { Github, Linkedin } from 'lucide-react'
-
 const GITHUB_URL = 'https://github.com/yuhsuan-liu/dani-art'
 const LINKEDIN_URL = 'https://www.linkedin.com/in/yuhsuan-liu-yl/'
 const UNSPLASH_LICENSE_URL = 'https://unsplash.com/license'
@@ -31,24 +29,22 @@ export function Footer() {
           .
         </p>
         <p>Created by YuHsuan Liu</p>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3 text-sm">
           <a
             href={GITHUB_URL}
-            className="footer-icon"
+            className="text-stone-500 underline decoration-stone-300 underline-offset-2 hover:text-stone-800"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub"
           >
-            <Github size={20} strokeWidth={1.75} />
+            GitHub
           </a>
           <a
             href={LINKEDIN_URL}
-            className="footer-icon"
+            className="text-stone-500 underline decoration-stone-300 underline-offset-2 hover:text-stone-800"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="LinkedIn"
           >
-            <Linkedin size={20} strokeWidth={1.75} />
+            LinkedIn
           </a>
         </div>
       </div>
