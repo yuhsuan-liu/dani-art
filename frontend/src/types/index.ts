@@ -1,15 +1,21 @@
-export interface Artist {
+export type UserRole = 'admin' | 'artist' | 'customer'
+
+export interface User {
   id: string
   email: string
   name: string
   bio?: string
   profile_pic_url?: string
+  role: UserRole
   created_at: string
 }
 
+// Alias for backward compatibility
+export type Artist = User
+
 export interface Room {
   id: string
-  artist_id: string
+  user_id: string
   name: string
   order: number
   background_url?: string
@@ -35,11 +41,13 @@ export interface Furniture {
   status: 'available' | 'reserved' | 'purchased'
   created_at: string
   updated_at: string
+  // Joined data
+  artwork?: Artwork
 }
 
 export interface Artwork {
   id: string
-  artist_id: string
+  user_id: string
   title: string
   description?: string
   price: number
@@ -55,6 +63,7 @@ export interface Order {
   id: string
   artwork_id: string
   furniture_id: string
+  customer_id?: string
   customer_name: string
   customer_email: string
   customer_phone?: string
@@ -77,7 +86,7 @@ export interface Order {
 
 export interface BlogPost {
   id: string
-  artist_id: string
+  user_id: string
   title: string
   content: string
   featured_image_url?: string

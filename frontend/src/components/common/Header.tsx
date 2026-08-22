@@ -7,7 +7,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export function Header() {
-  const { user, artist, loading, signOut } = useAuth()
+  const { user, isAuthenticated, isArtist, loading, signOut } = useAuth()
 
   return (
     <header className="border-b border-stone-200 bg-white/90 backdrop-blur-sm sticky top-0 z-20">
@@ -22,17 +22,26 @@ export function Header() {
           <NavLink to="/manage/art" className={navLinkClass}>
             Manage Art
           </NavLink>
+          <NavLink to="/dashboard" className={navLinkClass}>
+            Dashboard
+          </NavLink>
           <NavLink to="/blog" className={navLinkClass}>
             Blog
           </NavLink>
 
           {loading ? (
             <span className="text-sm text-stone-400">...</span>
-          ) : user && artist ? (
+          ) : isAuthenticated && isArtist ? (
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="text-sm text-stone-500 hover:text-stone-900"
+            >
+              Sign Out
+            </button>
+          ) : isAuthenticated ? (
             <>
-              <NavLink to="/dashboard" className={navLinkClass}>
-                Dashboard
-              </NavLink>
+              <span className="text-sm text-stone-500">Hi, {user?.name}</span>
               <button
                 type="button"
                 onClick={() => signOut()}

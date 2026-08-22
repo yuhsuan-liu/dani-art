@@ -1,65 +1,74 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { User, Session } from '@supabase/supabase-js'
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { supabase, signInWithGoogle, signOut } from '../lib/supabase'
-import type { Artist } from '../types'
+import type { User } from '../types'
 
 interface AuthContextType {
-  user: User | null
+  supabaseUser: SupabaseUser | null
   session: Session | null
-  artist: Artist | null
+  user: User | null
   loading: boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
+  isAdmin: boolean
   isArtist: boolean
+  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [artist, setArtist] = useState<Artist | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setUser(session?.user ?? null)
+      setSupabaseUser(session?.user ?? null)
       if (session?.user) {
-        fetchArtistProfile(session.user.email!)
+        fetchUserProfile(session.user.email!)
+      } else {
+        setLoading(false)
       }
-      setLoading(false)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session)
-        setUser(session?.user ?? null)
+        setSupabaseUser(session?.user ?? null)
         if (session?.user) {
-          await fetchArtistProfile(session.user.email!)
+          await fetchUserProfile(session.user.email!)
         } else {
-          setArtist(null)
+          setUser(null)
+          setLoading(false)
         }
-        setLoading(false)
       }
     )
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchArtistProfile(email: string) {
-    const { data, error } = await supabase
-      .from('artists')
-      .select('*')
-      .eq('email', email)
-      .single()
+  async function fetchUserProfile(email: string) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single()
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching artist profile:', error)
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user profile:', error)
+      }
+      setUser(data)
+    } catch (err) {
+      console.error('Error fetching user profile:', err)
+    } finally {
+      setLoading(false)
     }
-    setArtist(data)
   }
 
   const handleSignIn = async () => {
@@ -74,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = async () => {
     try {
       await signOut()
-      setArtist(null)
+      setUser(null)
     } catch (error) {
       console.error('Sign out error:', error)
       throw error
@@ -82,13 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const value: AuthContextType = {
-    user,
+    supabaseUser,
     session,
-    artist,
+    user,
     loading,
     signIn: handleSignIn,
     signOut: handleSignOut,
-    isArtist: !!artist,
+    isAdmin: user?.role === 'admin',
+    isArtist: user?.role === 'artist' || user?.role === 'admin',
+    isAuthenticated: !!supabaseUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

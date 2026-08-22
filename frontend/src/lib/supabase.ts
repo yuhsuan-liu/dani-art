@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Artist, Artwork, Room, Furniture, Order, BlogPost } from '../types'
+import type { User, Artwork, Room, Furniture, Order, BlogPost } from '../types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export interface Database {
   public: {
     Tables: {
-      artists: { Row: Artist; Insert: Omit<Artist, 'id' | 'created_at'>; Update: Partial<Artist> }
+      users: { Row: User; Insert: Omit<User, 'id' | 'created_at'>; Update: Partial<User> }
       artwork: { Row: Artwork; Insert: Omit<Artwork, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Artwork> }
       rooms: { Row: Room; Insert: Omit<Room, 'id' | 'created_at'>; Update: Partial<Room> }
       furniture: { Row: Furniture; Insert: Omit<Furniture, 'id' | 'created_at' | 'updated_at'>; Update: Partial<Furniture> }
