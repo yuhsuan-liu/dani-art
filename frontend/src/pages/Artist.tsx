@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Grid3X3, Home, LayoutGrid, List } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArtDetailModal } from '../components/art/ArtDetailModal'
@@ -7,7 +7,6 @@ import { ArtListView } from '../components/art/ArtListView'
 import { DemoDataBanner } from '../components/common/DemoBadge'
 import { ErrorAlert } from '../components/common/ErrorAlert'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
-import { ViewSwitch } from '../components/common/ViewSwitch'
 import { useAuth } from '../contexts/AuthContext'
 import { EditModeToolbar } from '../components/floor-map/EditModeToolbar'
 import { FurnitureEditPanel } from '../components/floor-map/FurnitureEditPanel'
@@ -34,6 +33,7 @@ import {
 import type { Artist as ArtistType, Artwork, Furniture, Room, RoomDecor } from '../types'
 
 type GalleryLayout = 'grid' | 'list'
+type SectionView = 'gallery' | 'floor-map'
 type RoomDialog =
   | { type: 'add' }
   | { type: 'rename'; room: Room }
@@ -47,6 +47,7 @@ export function Artist() {
   const [furniture, setFurniture] = useState<Furniture[]>([])
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string>()
+  const [activeSection, setActiveSection] = useState<SectionView>('floor-map')
   const [galleryLayout, setGalleryLayout] = useState<GalleryLayout>('grid')
   const [editMode, setEditMode] = useState(false)
   const [selectedFurniture, setSelectedFurniture] = useState<Furniture>()
@@ -244,27 +245,84 @@ export function Artist() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+      {/* Top nav bar */}
       <div className="flex items-center justify-between gap-3">
         <Link to="/" className="btn-c">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <Link to="/manage/art" className="btn-c hidden sm:inline-flex">
-          Manage art
-        </Link>
+        
+        {/* Pill-style section toggle - small, top-right */}
+        <div className="flex items-center gap-2 rounded-full border border-stone-200 bg-stone-50 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveSection('gallery')}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all ${
+              activeSection === 'gallery'
+                ? 'bg-stone-900 text-white shadow-sm'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Gallery</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSection('floor-map')}
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-all ${
+              activeSection === 'floor-map'
+                ? 'bg-stone-900 text-white shadow-sm'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            <Home className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Floor Map</span>
+          </button>
+        </div>
       </div>
 
-      <section className="mt-6 flex items-center gap-4">
-        <div className="avatar-lg flex items-center justify-center bg-amber-100 font-serif text-2xl text-amber-800">
-          {artist.name.charAt(0)}
-        </div>
-        <div>
-          <h1 className="font-serif text-2xl text-stone-900 sm:text-3xl">{artist.name}</h1>
-          <p className="mt-1 max-w-2xl text-sm text-stone-600">{artist.bio}</p>
+      {/* Hero section with artist info + CTA */}
+      <section className="mt-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="avatar-lg flex items-center justify-center bg-amber-100 font-serif text-2xl text-amber-800">
+              {artist.name.charAt(0)}
+            </div>
+            <div>
+              <h1 className="font-serif text-2xl text-stone-900 sm:text-3xl">{artist.name}</h1>
+              <p className="mt-1 max-w-md text-sm text-stone-600">{artist.bio}</p>
+            </div>
+          </div>
+          
+          {/* Primary CTA */}
+          <div className="flex gap-2">
+            {activeSection === 'floor-map' ? (
+              <button
+                type="button"
+                onClick={() => setActiveSection('gallery')}
+                className="btn-a whitespace-nowrap"
+              >
+                Browse All Art
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setActiveSection('floor-map')}
+                className="btn-a whitespace-nowrap"
+              >
+                Explore Rooms
+              </button>
+            )}
+            {isArtist && (
+              <Link to="/manage/art" className="btn-b hidden sm:inline-flex">
+                Manage
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <DemoDataBanner
           hasDemo={
             rooms.some(isDemoRecord) ||
@@ -281,62 +339,72 @@ export function Artist() {
         />
       </div>
 
-      <section id="gallery" className="mt-8 scroll-mt-24">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-amber-700 uppercase">
-              For sale
+      {/* Gallery Section */}
+      {activeSection === 'gallery' && (
+        <section id="gallery" className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-stone-50 p-3">
+            <p className="text-sm text-stone-600">
+              {artwork.length} piece{artwork.length !== 1 ? 's' : ''} available
             </p>
-            <h2 className="mt-2 font-serif text-2xl text-stone-900 sm:text-3xl">Artwork</h2>
-            <p className="mt-2 max-w-2xl text-sm text-stone-600">
-              Tap a piece to see details, price, and what furniture it funds.
+            <div className="flex items-center gap-1 rounded-lg border border-stone-200 bg-white p-0.5">
+              <button
+                type="button"
+                onClick={() => setGalleryLayout('grid')}
+                className={`rounded-md p-1.5 transition-colors ${
+                  galleryLayout === 'grid' ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:text-stone-600'
+                }`}
+                aria-label="Grid view"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setGalleryLayout('list')}
+                className={`rounded-md p-1.5 transition-colors ${
+                  galleryLayout === 'list' ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:text-stone-600'
+                }`}
+                aria-label="List view"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-4">
+            {galleryLayout === 'grid' ? (
+              <ArtGridView
+                artwork={artwork}
+                furnitureNameByArtId={furnitureNameByArtId}
+                onSelect={(item) => {
+                  setSelectedArtwork(item)
+                  setSelectedFurniture(undefined)
+                }}
+              />
+            ) : (
+              <ArtListView
+                artwork={artwork}
+                furnitureNameByArtId={furnitureNameByArtId}
+                onSelect={(item) => {
+                  setSelectedArtwork(item)
+                  setSelectedFurniture(undefined)
+                }}
+              />
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Floor Map Section */}
+      {activeSection === 'floor-map' && (
+        <section id="floor-map" className="mt-6">
+          {/* Contextual hint */}
+          <div className="mb-4 rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
+            <p className="text-sm text-amber-800">
+              <strong>How it works:</strong> Click any furniture piece to see the linked artwork. 
+              Buy the art, and {artist.name} gets that furniture.
             </p>
           </div>
-          <ViewSwitch
-            label="Gallery layout"
-            value={galleryLayout}
-            onChange={setGalleryLayout}
-            compact
-            options={[
-              { id: 'grid', label: 'Grid' },
-              { id: 'list', label: 'List' },
-            ]}
-          />
-        </div>
-        <div className="mt-6">
-          {galleryLayout === 'grid' ? (
-            <ArtGridView
-              artwork={artwork}
-              furnitureNameByArtId={furnitureNameByArtId}
-              onSelect={(item) => {
-                setSelectedArtwork(item)
-                setSelectedFurniture(undefined)
-              }}
-            />
-          ) : (
-            <ArtListView
-              artwork={artwork}
-              furnitureNameByArtId={furnitureNameByArtId}
-              onSelect={(item) => {
-                setSelectedArtwork(item)
-                setSelectedFurniture(undefined)
-              }}
-            />
-          )}
-        </div>
-      </section>
 
-      <section id="registry" className="mt-12 scroll-mt-24 border-t border-stone-200 pt-10">
-        <p className="text-xs font-medium tracking-[0.2em] text-amber-700 uppercase">
-          The registry
-        </p>
-        <h2 className="mt-2 font-serif text-2xl text-stone-900 sm:text-3xl">Floor plan</h2>
-        <p className="mt-2 max-w-2xl text-sm text-stone-600">
-          Each item is something Dani wants. Tap furniture to see the linked painting — buy
-          the art, he gets the piece.
-        </p>
-
-        <div className="mt-6 space-y-4">
+          <div className="space-y-4">
           {isArtist && (
             <EditModeToolbar
               editMode={editMode}
@@ -401,8 +469,9 @@ export function Artist() {
               )}
             </div>
           )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {!editMode && modalArtwork && (
         <ArtDetailModal
