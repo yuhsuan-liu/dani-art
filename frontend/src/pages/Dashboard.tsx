@@ -4,7 +4,6 @@ import { DemoBadge, DemoDataBanner, demoRowClass } from '../components/common/De
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
 import { useAuth } from '../contexts/AuthContext'
 import { isDemoRecord } from '../data/mockRegistry'
-import { DANI_SLUG, getArtist, getManagedArtistId } from '../lib/artists'
 import { getArtworkById } from '../lib/artwork'
 import { clearAllDemoData } from '../lib/demo'
 import { PrintReceiptReminder } from '../components/order/printReceipt'
@@ -31,26 +30,9 @@ export function Dashboard() {
   })
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [artistId, setArtistId] = useState<string>(DANI_SLUG)
-  const [displayName, setDisplayName] = useState('Dani')
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function resolveArtist() {
-      const managedId = await getManagedArtistId(user)
-      const artist = await getArtist(managedId)
-      if (!cancelled) {
-        setArtistId(managedId)
-        setDisplayName(artist?.name ?? user?.name ?? 'Dani')
-      }
-    }
-
-    resolveArtist()
-    return () => {
-      cancelled = true
-    }
-  }, [user])
+  const displayName = user?.name ?? 'Dani'
+  const artistId = user?.id ?? 'dani'
 
   useEffect(() => {
     let cancelled = false
@@ -190,7 +172,7 @@ export function Dashboard() {
         <h2 className="mb-3 font-serif text-xl text-stone-900">Quick actions</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <QuickAction
-            to={`/artists/${DANI_SLUG}`}
+            to={`/artists/${artistId}`}
             title="View Floor Map"
             description="Edit rooms, drag furniture, link artwork"
           />

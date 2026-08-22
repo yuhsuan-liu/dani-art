@@ -4,7 +4,6 @@ import { ArtManagementTable } from '../components/art/ArtManagementTable'
 import { DemoDataBanner } from '../components/common/DemoBadge'
 import { useAuth } from '../contexts/AuthContext'
 import { isDemoRecord } from '../data/mockRegistry'
-import { getManagedArtistId } from '../lib/artists'
 import {
   createArtwork,
   deleteArtwork,
@@ -23,7 +22,7 @@ import type { Artwork, Furniture, Order } from '../types'
 
 export function ArtManagement() {
   const { user } = useAuth()
-  const [artistId, setArtistId] = useState<string>('dani')
+  const artistId = user?.id ?? 'dani'
 
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [furniture, setFurniture] = useState<Furniture[]>([])
@@ -48,17 +47,6 @@ export function ArtManagement() {
   }
 
   useEffect(() => {
-    let cancelled = false
-    getManagedArtistId(user).then((id) => {
-      if (!cancelled) setArtistId(id)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (!artistId) return
     refresh()
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Could not load artwork')
