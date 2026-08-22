@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { ArtworkDraft } from '../../lib/artwork'
+import { uploadImage } from '../../lib/storage'
 import type { Artwork } from '../../types'
 
 type Props = {
@@ -17,6 +18,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
   const [medium, setMedium] = useState(initial?.medium ?? '')
   const [dimensions, setDimensions] = useState(initial?.dimensions ?? '')
   const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -34,14 +36,19 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
     setSaving(true)
     setError(null)
     try {
+      let nextImageUrl = imageUrl
+      if (pendingFile) {
+        const uploaded = await uploadImage('artwork', pendingFile, artistId)
+        nextImageUrl = uploaded.url
+      }
       await onSubmit({
-        artist_id: artistId,
+        user_id: artistId,
         title,
         price: parsedPrice,
         description: description || undefined,
         medium: medium || undefined,
         dimensions: dimensions || undefined,
-        image_url: imageUrl || undefined,
+        image_url: nextImageUrl || undefined,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save artwork')
@@ -52,6 +59,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
 
   function onFileChange(file: File | undefined) {
     if (!file) return
+    setPendingFile(file)
     setImageUrl(URL.createObjectURL(file))
   }
 
@@ -65,6 +73,9 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
           className="mt-1 block w-full text-sm"
           onChange={(event) => onFileChange(event.target.files?.[0])}
         />
+        <span className="mt-1 block text-xs text-stone-400">
+          Saved to Supabase Storage bucket <code>artwork</code> when configured.
+        </span>
       </label>
       {imageUrl && (
         <img src={imageUrl} alt="" className="h-32 w-full rounded-lg object-cover" />

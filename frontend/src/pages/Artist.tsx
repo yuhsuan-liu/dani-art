@@ -1,14 +1,32 @@
 import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArtDetailModal } from '../components/art/ArtDetailModal'
 import { ArtListView } from '../components/art/ArtListView'
+import { EditModeToolbar } from '../components/floor-map/EditModeToolbar'
+import { FurnitureEditPanel } from '../components/floor-map/FurnitureEditPanel'
 import { RoomCanvas } from '../components/floor-map/RoomCanvas'
-import { RoomTabs } from '../components/floor-map/RoomTabs'
+import { RoomNameDialog, RoomTabs } from '../components/floor-map/RoomTabs'
 import { getArtist } from '../lib/artists'
 import { getArtworkByArtist } from '../lib/artwork'
-import { getFurnitureByArtist, getRoomsByArtist } from '../lib/rooms'
+import {
+  createFurniture,
+  createRoom,
+  deleteFurniture,
+  deleteRoom,
+  getFurnitureByArtist,
+  getRoomsByArtist,
+  updateFurniture,
+  updateFurniturePosition,
+  updateRoom,
+  type FurnitureDraft,
+} from '../lib/rooms'
 import type { Artist as ArtistType, Artwork, Furniture, Room } from '../types'
+
+type RoomDialog =
+  | { type: 'add' }
+  | { type: 'rename'; room: Room }
+  | null
 
 export function Artist() {
   const { artistId = '' } = useParams()
@@ -18,29 +36,39 @@ export function Artist() {
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [activeRoomId, setActiveRoomId] = useState<string>()
   const [view, setView] = useState<'map' | 'list'>('map')
+  const [editMode, setEditMode] = useState(false)
   const [selectedFurniture, setSelectedFurniture] = useState<Furniture>()
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork>()
+  const [editingFurniture, setEditingFurniture] = useState<Furniture | null>(null)
+  const [addingFurniture, setAddingFurniture] = useState(false)
+  const [roomDialog, setRoomDialog] = useState<RoomDialog>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const saveTimer = useRef<number | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-
-    Promise.all([
+  const refresh = useCallback(async () => {
+    const [nextArtist, nextRooms, nextFurniture, nextArtwork] = await Promise.all([
       getArtist(artistId),
       getRoomsByArtist(artistId),
       getFurnitureByArtist(artistId),
       getArtworkByArtist(artistId),
     ])
-      .then(([nextArtist, nextRooms, nextFurniture, nextArtwork]) => {
-        if (cancelled) return
-        setArtist(nextArtist)
-        setRooms(nextRooms)
-        setFurniture(nextFurniture)
-        setArtwork(nextArtwork)
-        setActiveRoomId(nextRooms[0]?.id)
-      })
+    setArtist(nextArtist)
+    setRooms(nextRooms)
+    setFurniture(nextFurniture)
+    setArtwork(nextArtwork)
+    setActiveRoomId((current) =>
+      current && nextRooms.some((room) => room.id === current)
+        ? current
+        : nextRooms[0]?.id,
+    )
+  }, [artistId])
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    refresh()
       .catch((err: unknown) => {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Could not load artist')
@@ -49,11 +77,16 @@ export function Artist() {
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-
     return () => {
       cancelled = true
     }
-  }, [artistId])
+  }, [refresh])
+
+  const markSaving = useCallback(() => {
+    setSaveStatus('saving')
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => setSaveStatus('saved'), 400)
+  }, [])
 
   const artworkById = useMemo(
     () => Object.fromEntries(artwork.map((item) => [item.id, item])),
@@ -80,6 +113,7 @@ export function Artist() {
 
   const activeRoom = rooms.find((room) => room.id === activeRoomId)
   const roomFurniture = furniture.filter((item) => item.room_id === activeRoomId)
+  const ownerId = artist?.id ?? 'dani'
 
   const modalArtwork =
     selectedArtwork ??
@@ -89,9 +123,50 @@ export function Artist() {
     (selectedArtwork ? furnitureByArtId[selectedArtwork.id] : undefined)
 
   function openFurniture(item: Furniture) {
+    if (editMode) {
+      setEditingFurniture(item)
+      return
+    }
     if (!item.artwork_id) return
     setSelectedFurniture(item)
     setSelectedArtwork(undefined)
+  }
+
+  function handleMove(id: string, x: number, y: number) {
+    setFurniture((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, position_x: x, position_y: y } : item,
+      ),
+    )
+  }
+
+  async function handleMoveEnd(id: string, x: number, y: number) {
+    try {
+      markSaving()
+      await updateFurniturePosition(id, x, y)
+      setSaveStatus('saved')
+    } catch {
+      setSaveStatus('error')
+    }
+  }
+
+  async function handleFurnitureSubmit(draft: FurnitureDraft) {
+    markSaving()
+    if (editingFurniture) {
+      await updateFurniture(editingFurniture.id, {
+        name: draft.name,
+        price: draft.price,
+        image_url: draft.image_url,
+        external_url: draft.external_url,
+        artwork_id: draft.artwork_id || undefined,
+      })
+    } else {
+      await createFurniture(draft)
+    }
+    await refresh()
+    setEditingFurniture(null)
+    setAddingFurniture(false)
+    setSaveStatus('saved')
   }
 
   if (loading) {
@@ -145,24 +220,60 @@ export function Artist() {
 
       {view === 'map' && (
         <section className="mt-8 space-y-4">
+          <EditModeToolbar
+            editMode={editMode}
+            saveStatus={saveStatus}
+            onToggle={() => {
+              setEditMode((value) => !value)
+              setEditingFurniture(null)
+              setAddingFurniture(false)
+            }}
+            onAddFurniture={() => {
+              setAddingFurniture(true)
+              setEditingFurniture(null)
+            }}
+          />
+
           {rooms.length > 0 && activeRoom ? (
             <>
               <RoomTabs
                 rooms={rooms}
                 activeRoomId={activeRoom.id}
+                editMode={editMode}
                 onSelect={setActiveRoomId}
+                onAddRoom={() => setRoomDialog({ type: 'add' })}
+                onRenameRoom={(room) => setRoomDialog({ type: 'rename', room })}
+                onDeleteRoom={async (room) => {
+                  if (!window.confirm(`Delete room “${room.name}” and its furniture?`)) return
+                  markSaving()
+                  await deleteRoom(room.id)
+                  await refresh()
+                  setSaveStatus('saved')
+                }}
               />
               <RoomCanvas
                 room={activeRoom}
                 furniture={roomFurniture}
                 artworkById={artworkById}
+                editMode={editMode}
                 onSelectFurniture={openFurniture}
+                onMoveFurniture={handleMove}
+                onMoveFurnitureEnd={handleMoveEnd}
               />
             </>
           ) : (
-            <p className="rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center text-stone-500">
-              No rooms yet. Floor map data will load from the backend soon.
-            </p>
+            <div className="rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center">
+              <p className="text-stone-500">No rooms yet.</p>
+              {editMode && (
+                <button
+                  type="button"
+                  onClick={() => setRoomDialog({ type: 'add' })}
+                  className="mt-4 rounded-lg bg-stone-900 px-4 py-2 text-sm text-white"
+                >
+                  Add a room
+                </button>
+              )}
+            </div>
           )}
         </section>
       )}
@@ -180,13 +291,59 @@ export function Artist() {
         </section>
       )}
 
-      {modalArtwork && (
+      {!editMode && modalArtwork && (
         <ArtDetailModal
           artwork={modalArtwork}
           furniture={modalFurniture}
           onClose={() => {
             setSelectedArtwork(undefined)
             setSelectedFurniture(undefined)
+          }}
+        />
+      )}
+
+      {(addingFurniture || editingFurniture) && activeRoom && (
+        <FurnitureEditPanel
+          roomId={activeRoom.id}
+          artworkOptions={artwork}
+          initial={editingFurniture ?? undefined}
+          onClose={() => {
+            setAddingFurniture(false)
+            setEditingFurniture(null)
+          }}
+          onSubmit={handleFurnitureSubmit}
+          onDelete={
+            editingFurniture
+              ? async () => {
+                  markSaving()
+                  await deleteFurniture(editingFurniture.id)
+                  await refresh()
+                  setEditingFurniture(null)
+                  setSaveStatus('saved')
+                }
+              : undefined
+          }
+        />
+      )}
+
+      {roomDialog && (
+        <RoomNameDialog
+          title={roomDialog.type === 'add' ? 'Add room' : 'Rename room'}
+          initialName={roomDialog.type === 'rename' ? roomDialog.room.name : ''}
+          onCancel={() => setRoomDialog(null)}
+          onConfirm={async (name) => {
+            if (!name) return
+            markSaving()
+            if (roomDialog.type === 'add') {
+              const created = await createRoom({ user_id: ownerId, name })
+              await refresh()
+              setActiveRoomId(created.id)
+            } else {
+              await updateRoom(roomDialog.room.id, { name })
+              await refresh()
+            }
+            setRoomDialog(null)
+            setSaveStatus('saved')
           }}
         />
       )}

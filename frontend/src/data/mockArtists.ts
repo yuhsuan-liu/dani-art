@@ -8,6 +8,7 @@ export const MOCK_FEATURED_ARTISTS: Artist[] = [
     name: 'Dani',
     bio: 'Painter and drummer in Monterey. Buy a piece and help furnish the studio — mattress, couch, and all.',
     profile_pic_url: undefined,
+    role: 'artist',
     created_at: '2026-08-01T00:00:00.000Z',
   },
 ]

@@ -1,9 +1,9 @@
-import type { Artwork, Furniture, Room } from '../types'
+import type { Artwork, Furniture, Order, Room } from '../types'
 
 export const MOCK_ROOMS: Room[] = [
   {
     id: 'room-living',
-    artist_id: 'dani',
+    user_id: 'dani',
     name: 'Living Room',
     order: 0,
     width: 800,
@@ -12,7 +12,7 @@ export const MOCK_ROOMS: Room[] = [
   },
   {
     id: 'room-drum',
-    artist_id: 'dani',
+    user_id: 'dani',
     name: 'Drum Studio',
     order: 1,
     width: 800,
@@ -24,7 +24,7 @@ export const MOCK_ROOMS: Room[] = [
 export const MOCK_ARTWORK: Artwork[] = [
   {
     id: 'art-sunset',
-    artist_id: 'dani',
+    user_id: 'dani',
     title: 'Sunset Over Monterey',
     description: 'Warm evening light over the bay.',
     price: 400,
@@ -37,7 +37,7 @@ export const MOCK_ARTWORK: Artwork[] = [
   },
   {
     id: 'art-beach',
-    artist_id: 'dani',
+    user_id: 'dani',
     title: 'Beach Day',
     description: 'Figures on the sand, late afternoon.',
     price: 800,
@@ -50,7 +50,7 @@ export const MOCK_ARTWORK: Artwork[] = [
   },
   {
     id: 'art-jazz',
-    artist_id: 'dani',
+    user_id: 'dani',
     title: 'Night Jazz',
     description: 'A small study from a late gig.',
     price: 50,
@@ -63,7 +63,7 @@ export const MOCK_ARTWORK: Artwork[] = [
   },
   {
     id: 'art-unlinked',
-    artist_id: 'dani',
+    user_id: 'dani',
     title: 'Untitled sketch',
     description: 'Needs a furniture match.',
     price: 120,
@@ -144,6 +144,51 @@ export const MOCK_FURNITURE: Furniture[] = [
     status: 'available',
     created_at: '2026-08-01T00:00:00.000Z',
     updated_at: '2026-08-01T00:00:00.000Z',
+  },
+]
+
+export const MOCK_ORDERS: Order[] = [
+  {
+    id: 'order-1',
+    artwork_id: 'art-sunset',
+    furniture_id: 'furn-couch',
+    customer_name: 'Jordan Smith',
+    customer_email: 'jordan@example.com',
+    delivery_type: 'pickup',
+    total_amount: 400,
+    shipping_fee: 0,
+    status: 'completed',
+    payment_method: 'venmo',
+    created_at: '2026-08-15T00:00:00.000Z',
+    updated_at: '2026-08-16T00:00:00.000Z',
+  },
+  {
+    id: 'order-2',
+    artwork_id: 'art-jazz',
+    furniture_id: 'furn-lamp',
+    customer_name: 'Maya Chen',
+    customer_email: 'maya@example.com',
+    delivery_type: 'local_delivery',
+    total_amount: 65,
+    shipping_fee: 15,
+    status: 'pending',
+    payment_method: 'paypal',
+    created_at: '2026-08-18T00:00:00.000Z',
+    updated_at: '2026-08-18T00:00:00.000Z',
+  },
+  {
+    id: 'order-3',
+    artwork_id: 'art-beach',
+    furniture_id: 'furn-bed',
+    customer_name: 'Alex Rivera',
+    customer_email: 'alex@example.com',
+    delivery_type: 'shipping',
+    total_amount: 830,
+    shipping_fee: 30,
+    status: 'confirmed',
+    payment_method: 'venmo',
+    created_at: '2026-08-20T00:00:00.000Z',
+    updated_at: '2026-08-21T00:00:00.000Z',
   },
 ]
 

@@ -6,10 +6,21 @@ type Props = {
   room: Room
   furniture: Furniture[]
   artworkById: Record<string, Artwork>
+  editMode?: boolean
   onSelectFurniture: (item: Furniture) => void
+  onMoveFurniture?: (id: string, x: number, y: number) => void
+  onMoveFurnitureEnd?: (id: string, x: number, y: number) => void
 }
 
-export function RoomCanvas({ room, furniture, artworkById, onSelectFurniture }: Props) {
+export function RoomCanvas({
+  room,
+  furniture,
+  artworkById,
+  editMode = false,
+  onSelectFurniture,
+  onMoveFurniture,
+  onMoveFurnitureEnd,
+}: Props) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
 
@@ -18,7 +29,8 @@ export function RoomCanvas({ room, furniture, artworkById, onSelectFurniture }: 
     if (!el) return
 
     const update = () => {
-      setScale(el.clientWidth / room.width)
+      const width = el.clientWidth
+      if (width > 0) setScale(width / room.width)
     }
     update()
     const observer = new ResizeObserver(update)
@@ -29,7 +41,9 @@ export function RoomCanvas({ room, furniture, artworkById, onSelectFurniture }: 
   return (
     <div
       ref={frameRef}
-      className="relative w-full overflow-visible rounded-2xl border border-stone-200 bg-[#f3efe6]"
+      className={`relative w-full rounded-2xl border bg-[#f3efe6] ${
+        editMode ? 'overflow-hidden border-amber-300 ring-2 ring-amber-200' : 'overflow-visible border-stone-200'
+      }`}
       style={{ aspectRatio: `${room.width} / ${room.height}` }}
     >
       <div
@@ -42,7 +56,10 @@ export function RoomCanvas({ room, furniture, artworkById, onSelectFurniture }: 
           item={item}
           scale={scale}
           artwork={item.artwork_id ? artworkById[item.artwork_id] : undefined}
+          editMode={editMode}
           onSelect={onSelectFurniture}
+          onMove={onMoveFurniture}
+          onMoveEnd={onMoveFurnitureEnd}
         />
       ))}
     </div>

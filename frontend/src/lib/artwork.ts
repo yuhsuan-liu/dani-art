@@ -12,23 +12,26 @@ export type ArtworkDraft = {
   medium?: string
   dimensions?: string
   image_url?: string
-  artist_id: string
+  user_id: string
 }
 
 /**
  * Expected backend contract:
- *   GET    /artists/:artistId/artwork → Artwork[]
- *   GET    /artwork/:id               → Artwork
- *   POST   /artwork                   → Artwork  (multipart when uploading files)
- *   PATCH  /artwork/:id               → Artwork
- *   DELETE /artwork/:id               → void
+ *   GET    /artists/:userId/artwork → Artwork[]
+ *   GET    /artwork/:id             → Artwork
+ *   POST   /artwork                 → Artwork
+ *   PATCH  /artwork/:id             → Artwork
+ *   DELETE /artwork/:id             → void
  */
-export async function getArtworkByArtist(artistId: string): Promise<Artwork[]> {
-  // return apiRequest<Artwork[]>(`/artists/${artistId}/artwork`)
+export async function getArtworkByArtist(userId: string): Promise<Artwork[]> {
+  // return apiRequest<Artwork[]>(`/artists/${userId}/artwork`)
   await wait()
-  return artworkStore
-    .filter((item) => item.artist_id === artistId)
-    .map((item) => ({ ...item }))
+  const matched = artworkStore.filter((item) => item.user_id === userId)
+  const list =
+    matched.length > 0
+      ? matched
+      : artworkStore.filter((item) => item.user_id === 'dani')
+  return list.map((item) => ({ ...item }))
 }
 
 export async function getArtworkById(id: string): Promise<Artwork | undefined> {
@@ -44,7 +47,7 @@ export async function createArtwork(draft: ArtworkDraft): Promise<Artwork> {
   const now = new Date().toISOString()
   const created: Artwork = {
     id: newId('art'),
-    artist_id: draft.artist_id,
+    user_id: draft.user_id,
     title: draft.title.trim() || `Untitled ${now}`,
     description: draft.description,
     price: draft.price,
@@ -61,7 +64,9 @@ export async function createArtwork(draft: ArtworkDraft): Promise<Artwork> {
 
 export async function updateArtwork(
   id: string,
-  patch: Partial<Pick<Artwork, 'title' | 'price' | 'description' | 'medium' | 'dimensions' | 'status' | 'image_url'>>,
+  patch: Partial<
+    Pick<Artwork, 'title' | 'price' | 'description' | 'medium' | 'dimensions' | 'status' | 'image_url'>
+  >,
 ): Promise<Artwork> {
   // return apiRequest<Artwork>(`/artwork/${id}`, { method: 'PATCH', body: JSON.stringify(patch) })
   await wait()
