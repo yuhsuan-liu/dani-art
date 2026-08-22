@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArtForm } from '../components/art/ArtForm'
 import { ArtManagementTable } from '../components/art/ArtManagementTable'
 import { DemoDataBanner } from '../components/common/DemoBadge'
+import { useAuth } from '../contexts/AuthContext'
 import { isDemoRecord } from '../data/mockRegistry'
 import {
   createArtwork,
@@ -11,26 +12,38 @@ import {
   type ArtworkDraft,
 } from '../lib/artwork'
 import { clearAllDemoData } from '../lib/demo'
+import {
+  cancelOrderAndRelease,
+  getPendingOrdersByArtworkIds,
+  markArtworkAvailable,
+} from '../lib/orders'
 import { getFurnitureByArtist } from '../lib/rooms'
-import type { Artwork, Furniture } from '../types'
-
-const ARTIST_ID = 'dani'
+import type { Artwork, Furniture, Order } from '../types'
 
 export function ArtManagement() {
+  const { user } = useAuth()
+  const artistId = user?.id ?? 'dani'
+
   const [artwork, setArtwork] = useState<Artwork[]>([])
   const [furniture, setFurniture] = useState<Furniture[]>([])
+  const [pendingOrderByArtId, setPendingOrderByArtId] = useState<Record<string, Order>>({})
   const [mode, setMode] = useState<'list' | 'create' | 'edit'>('list')
   const [editing, setEditing] = useState<Artwork>()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [actionArtworkId, setActionArtworkId] = useState<string | null>(null)
 
   async function refresh() {
     const [nextArtwork, nextFurniture] = await Promise.all([
-      getArtworkByArtist(ARTIST_ID),
-      getFurnitureByArtist(ARTIST_ID),
+      getArtworkByArtist(artistId),
+      getFurnitureByArtist(artistId),
     ])
     setArtwork(nextArtwork)
     setFurniture(nextFurniture)
+
+    const artworkIds = nextArtwork.map((item) => item.id)
+    const pending = await getPendingOrdersByArtworkIds(artworkIds)
+    setPendingOrderByArtId(pending)
   }
 
   useEffect(() => {
@@ -39,7 +52,7 @@ export function ArtManagement() {
         setError(err instanceof Error ? err.message : 'Could not load artwork')
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [artistId])
 
   const furnitureNameByArtId = useMemo(
     () =>
@@ -77,6 +90,70 @@ export function ArtManagement() {
     if (!confirmed) return
     await deleteArtwork(item.id)
     await refresh()
+  }
+
+  function applyDemoRelease(artworkId: string) {
+    setArtwork((prev) =>
+      prev.map((item) =>
+        item.id === artworkId ? { ...item, status: 'available' as const } : item,
+      ),
+    )
+    setFurniture((prev) =>
+      prev.map((item) =>
+        item.artwork_id === artworkId
+          ? { ...item, status: 'available' as const }
+          : item,
+      ),
+    )
+    setPendingOrderByArtId((prev) => {
+      const next = { ...prev }
+      delete next[artworkId]
+      return next
+    })
+  }
+
+  async function handleMarkAvailable(item: Artwork) {
+    const confirmed = window.confirm(
+      `Mark “${item.title}” as available again? Any pending order for this piece will be cancelled.`,
+    )
+    if (!confirmed) return
+
+    setActionArtworkId(item.id)
+    setError(null)
+    try {
+      if (isDemoRecord(item)) {
+        applyDemoRelease(item.id)
+        return
+      }
+      await markArtworkAvailable(item.id)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update artwork')
+    } finally {
+      setActionArtworkId(null)
+    }
+  }
+
+  async function handleCancelOrder(item: Artwork, order: Order) {
+    const confirmed = window.confirm(
+      `Cancel the pending order from ${order.customer_name}? The artwork and linked furniture will become available again.`,
+    )
+    if (!confirmed) return
+
+    setActionArtworkId(item.id)
+    setError(null)
+    try {
+      if (isDemoRecord(item)) {
+        applyDemoRelease(item.id)
+        return
+      }
+      await cancelOrderAndRelease(item.id)
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not cancel order')
+    } finally {
+      setActionArtworkId(null)
+    }
   }
 
   return (
@@ -119,11 +196,15 @@ export function ArtManagement() {
           <ArtManagementTable
             artwork={artwork}
             furnitureNameByArtId={furnitureNameByArtId}
+            pendingOrderByArtId={pendingOrderByArtId}
+            actionArtworkId={actionArtworkId}
             onEdit={(item) => {
               setEditing(item)
               setMode('edit')
             }}
             onDelete={handleDelete}
+            onMarkAvailable={handleMarkAvailable}
+            onCancelOrder={handleCancelOrder}
           />
         </div>
       )}
@@ -136,7 +217,7 @@ export function ArtManagement() {
           </p>
           <div className="mt-4">
             <ArtForm
-              artistId={ARTIST_ID}
+              artistId={artistId}
               submitLabel="Save artwork"
               onSubmit={handleCreate}
               onCancel={() => setMode('list')}
@@ -150,7 +231,7 @@ export function ArtManagement() {
           <h2 className="font-serif text-xl text-stone-900">Edit details</h2>
           <div className="mt-4">
             <ArtForm
-              artistId={ARTIST_ID}
+              artistId={artistId}
               initial={editing}
               submitLabel="Save changes"
               onSubmit={handleEdit}
