@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
-import { supabase, signInWithGoogle, signOut } from '../lib/supabase'
+import { supabase, signInWithGoogle, signOut, supabasePublic, withTimeout } from '../lib/supabase'
 import type { User } from '../types'
 
 interface AuthContextType {
@@ -55,19 +55,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setLoading(false)
     })
 
+    // Must stay synchronous: supabase-js invokes this while holding the auth
+    // lock, so awaiting another Supabase call here deadlocks every query.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (cancelled) return
-        
-        // Clean up URL on successful sign in
+
         if (event === 'SIGNED_IN') {
           cleanupAuthParams()
         }
-        
+
         setSession(session)
         setSupabaseUser(session?.user ?? null)
-        if (session?.user) {
-          await fetchUserProfile(session.user.email!)
+
+        const email = session?.user?.email
+        if (email) {
+          window.setTimeout(() => {
+            if (!cancelled) void fetchUserProfile(email)
+          }, 0)
         } else {
           setUser(null)
           setLoading(false)
@@ -84,11 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchUserProfile(email: string) {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single()
+      const { data, error } = await withTimeout(
+        supabasePublic.from('users').select('*').eq('email', email).maybeSingle(),
+      )
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user profile:', error)
@@ -131,14 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isArtist: user?.role === 'artist' || user?.role === 'admin',
     isAuthenticated: !!supabaseUser,
   }
-
-  // Debug: log auth state changes
-  console.log('[auth] State:', { 
-    isAuthenticated: !!supabaseUser, 
-    userRole: user?.role,
-    isArtist: value.isArtist,
-    loading 
-  })
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

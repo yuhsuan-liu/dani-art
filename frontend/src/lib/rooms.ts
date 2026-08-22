@@ -3,7 +3,7 @@ import { isDaniSlug, resolveArtistUserId } from './artists'
 import { demoFurnitureList, demoRoomList } from './demoContent'
 import { useMockFallback } from './dataMode'
 import { withRoomDecor } from './roomDecor'
-import { supabase } from './supabase'
+import { supabase, supabasePublic, withTimeout } from './supabase'
 import type { Furniture, Room } from '../types'
 
 /**
@@ -20,11 +20,9 @@ export async function getRoomsByArtist(userIdOrSlug: string): Promise<Room[]> {
     return showDemo ? demoRoomList() : []
   }
 
-  const { data, error } = await supabase
-    .from('rooms')
-    .select('*')
-    .eq('user_id', userId)
-    .order('order')
+  const { data, error } = await withTimeout(
+    supabasePublic.from('rooms').select('*').eq('user_id', userId).order('order'),
+  )
 
   if (error) {
     console.warn('Rooms fetch failed, using demo content:', error.message)
@@ -95,11 +93,13 @@ export async function deleteRoom(id: string): Promise<void> {
 }
 
 export async function getFurnitureByRoom(roomId: string): Promise<Furniture[]> {
-  const { data, error } = await supabase
-    .from('furniture')
-    .select('*, artwork(*)')
-    .eq('room_id', roomId)
-    .order('z_index')
+  const { data, error } = await withTimeout(
+    supabasePublic
+      .from('furniture')
+      .select('*, artwork(*)')
+      .eq('room_id', roomId)
+      .order('z_index'),
+  )
 
   if (error) {
     console.error('Error fetching furniture:', error)
@@ -120,11 +120,13 @@ export async function getFurnitureByArtist(userIdOrSlug: string): Promise<Furnit
 
   const roomIds = rooms.map((room) => room.id)
 
-  const { data, error } = await supabase
-    .from('furniture')
-    .select('*, artwork(*)')
-    .in('room_id', roomIds)
-    .order('z_index')
+  const { data, error } = await withTimeout(
+    supabasePublic
+      .from('furniture')
+      .select('*, artwork(*)')
+      .in('room_id', roomIds)
+      .order('z_index'),
+  )
 
   if (error) {
     console.warn('Furniture fetch failed, using demo content:', error.message)

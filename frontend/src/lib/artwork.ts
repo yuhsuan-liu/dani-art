@@ -2,7 +2,7 @@ import { fixDemoImageUrl } from '../data/mockRegistry'
 import { isDaniSlug, resolveArtistUserId } from './artists'
 import { demoArtworkList } from './demoContent'
 import { useMockFallback } from './dataMode'
-import { supabase, isSupabaseConfigured } from './supabase'
+import { supabase, isSupabaseConfigured, supabasePublic, withTimeout } from './supabase'
 import type { Artwork } from '../types'
 
 export type ArtworkDraft = {
@@ -24,30 +24,22 @@ function shouldShowDemoForSlug(slug: string): boolean {
  */
 
 export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[]> {
-  console.log('[artwork] getArtworkByArtist called with:', userIdOrSlug)
-  console.log('[artwork] useMockFallback:', useMockFallback())
-  
-  if (useMockFallback()) {
-    console.log('[artwork] Using mock fallback')
-    return demoArtworkList()
-  }
+  if (useMockFallback()) return demoArtworkList()
 
   const showDemo = shouldShowDemoForSlug(userIdOrSlug)
   const userId = await resolveArtistUserId(userIdOrSlug)
-  console.log('[artwork] Resolved userId:', userId, 'showDemo:', showDemo)
 
   if (!userId) {
-    console.log('[artwork] No userId, returning demo:', showDemo)
     return showDemo ? demoArtworkList() : []
   }
 
-  const { data, error } = await supabase
-    .from('artwork')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-
-  console.log('[artwork] Supabase response - data:', data?.length, 'error:', error?.message)
+  const { data, error } = await withTimeout(
+    supabasePublic
+      .from('artwork')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false }),
+  )
 
   if (error) {
     console.warn('Artwork fetch failed, using demo content:', error.message)
@@ -55,11 +47,9 @@ export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[
   }
 
   if (!data?.length) {
-    console.log('[artwork] No data, returning demo')
     return showDemo ? demoArtworkList() : []
   }
 
-  console.log('[artwork] Returning', data.length, 'artworks from database')
   return data.map((item) => ({
     ...item,
     image_url: fixDemoImageUrl(item.image_url),
@@ -68,11 +58,9 @@ export async function getArtworkByArtist(userIdOrSlug: string): Promise<Artwork[
 
 export async function getArtworkById(id: string): Promise<Artwork | undefined> {
   if (isSupabaseConfigured()) {
-    const { data, error } = await supabase
-      .from('artwork')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
+    const { data, error } = await withTimeout<Artwork>(
+      supabasePublic.from('artwork').select('*').eq('id', id).maybeSingle(),
+    )
 
     if (!error && data) {
       return { ...data, image_url: fixDemoImageUrl(data.image_url) }

@@ -4,10 +4,6 @@ import type { User, Artwork, Room, Furniture, Order, BlogPost } from '../types'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Debug: Show what Supabase URL is configured
-console.log('[supabase] URL configured:', supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'NOT SET')
-console.log('[supabase] Key configured:', supabaseAnonKey ? 'YES (length: ' + supabaseAnonKey.length + ')' : 'NOT SET')
-
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase credentials not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env')
 }
@@ -32,6 +28,20 @@ export function getAuthRedirectUrl(): string {
   return `${window.location.origin}${path}`
 }
 
+/**
+ * supabase-js serializes auth work behind a Web Locks lock, and every PostgREST
+ * query awaits the session before it sends a request. A lock that is never
+ * released therefore hangs all reads with no network activity at all, so use a
+ * pass-through lock instead.
+ */
+async function passthroughLock<R>(
+  _name: string,
+  _acquireTimeout: number,
+  fn: () => Promise<R>,
+): Promise<R> {
+  return fn()
+}
+
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key',
@@ -40,9 +50,52 @@ export const supabase = createClient<Database>(
       detectSessionInUrl: true,
       flowType: 'pkce',
       persistSession: true,
+      lock: passthroughLock,
     },
   },
 )
+
+/**
+ * Anonymous client for public reads (galleries, rooms, furniture). It never
+ * touches auth storage, so browsing cannot be blocked by the auth layer.
+ */
+export const supabasePublic = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      lock: passthroughLock,
+      storageKey: 'sb-dani-art-public',
+    },
+  },
+)
+
+type QueryResult<T> = {
+  data: T | null
+  error: { message: string; code?: string } | null
+}
+
+/** Surface a stalled query as an error so callers fall back instead of hanging. */
+export async function withTimeout<T>(
+  query: PromiseLike<QueryResult<T>>,
+  ms = 8000,
+): Promise<QueryResult<T>> {
+  let timer: number | undefined
+  const timeout = new Promise<QueryResult<T>>((resolve) => {
+    timer = window.setTimeout(
+      () => resolve({ data: null, error: { message: `Timed out after ${ms}ms` } }),
+      ms,
+    )
+  })
+  try {
+    return await Promise.race([Promise.resolve(query), timeout])
+  } finally {
+    if (timer) window.clearTimeout(timer)
+  }
+}
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl) && Boolean(supabaseAnonKey)

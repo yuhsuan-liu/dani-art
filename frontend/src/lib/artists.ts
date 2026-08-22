@@ -1,6 +1,6 @@
 import { MOCK_FEATURED_ARTISTS } from '../data/mockArtists'
 import { useMockFallback, usePublicDemoWhenEmpty } from './dataMode'
-import { supabase, isSupabaseConfigured } from './supabase'
+import { isSupabaseConfigured, supabasePublic, withTimeout } from './supabase'
 import { isUuid } from './utils'
 import type { User } from '../types'
 
@@ -26,57 +26,47 @@ export { isDaniSlug }
 export async function resolveArtistUserId(
   idOrSlug: string,
 ): Promise<string | undefined> {
-  console.log('[artists] resolveArtistUserId called with:', idOrSlug)
-  
-  if (isUuid(idOrSlug)) {
-    console.log('[artists] Input is UUID, returning as-is')
-    return idOrSlug
-  }
-  
-  if (!isSupabaseConfigured()) {
-    console.log('[artists] Supabase not configured')
-    return undefined
-  }
+  if (isUuid(idOrSlug)) return idOrSlug
+  if (!isSupabaseConfigured()) return undefined
 
   try {
-    console.log('[artists] Making Supabase query...')
-    const { data: byName, error: nameError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('role', 'artist')
-      .ilike('name', `%${idOrSlug}%`)
-      .limit(1)
-      .maybeSingle()
-
-    console.log('[artists] Query by name result:', byName, 'error:', nameError?.message)
-
-    if (byName?.id) return byName.id
-
-    if (isDaniSlug(idOrSlug)) {
-      console.log('[artists] Trying to find any artist (dani slug fallback)')
-      const { data: firstArtist, error: artistError } = await supabase
+    const { data: byName, error: nameError } = await withTimeout<{ id: string }>(
+      supabasePublic
         .from('users')
         .select('id')
         .eq('role', 'artist')
+        .ilike('name', `%${idOrSlug}%`)
         .limit(1)
-        .maybeSingle()
-      console.log('[artists] First artist result:', firstArtist, 'error:', artistError?.message)
+        .maybeSingle(),
+    )
+
+    if (nameError) console.warn('Artist lookup failed:', nameError.message)
+    if (byName?.id) return byName.id
+
+    if (isDaniSlug(idOrSlug)) {
+      const { data: firstArtist } = await withTimeout<{ id: string }>(
+        supabasePublic
+          .from('users')
+          .select('id')
+          .eq('role', 'artist')
+          .limit(1)
+          .maybeSingle(),
+      )
       return firstArtist?.id
     }
 
     return undefined
   } catch (err) {
-    console.error('[artists] CAUGHT ERROR:', err)
+    console.warn('Artist lookup threw:', err)
     return undefined
   }
 }
 
 export async function getArtists(): Promise<Artist[]> {
   if (isSupabaseConfigured()) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('role', 'artist')
+    const { data, error } = await withTimeout(
+      supabasePublic.from('users').select('*').eq('role', 'artist'),
+    )
 
     if (!error && data) return data
     if (!useMockFallback()) return []
@@ -87,29 +77,27 @@ export async function getArtists(): Promise<Artist[]> {
 export async function getArtist(idOrSlug: string): Promise<Artist | undefined> {
   if (isSupabaseConfigured()) {
     if (isUuid(idOrSlug)) {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', idOrSlug)
-        .maybeSingle()
+      const { data } = await withTimeout(
+        supabasePublic.from('users').select('*').eq('id', idOrSlug).maybeSingle(),
+      )
       if (data) return data
     } else {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'artist')
-        .ilike('name', `%${idOrSlug}%`)
-        .limit(1)
-        .maybeSingle()
+      const { data } = await withTimeout(
+        supabasePublic
+          .from('users')
+          .select('*')
+          .eq('role', 'artist')
+          .ilike('name', `%${idOrSlug}%`)
+          .limit(1)
+          .maybeSingle(),
+      )
       if (data) return data
 
       const userId = await resolveArtistUserId(idOrSlug)
       if (userId && isUuid(userId)) {
-        const { data: byId } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle()
+        const { data: byId } = await withTimeout(
+          supabasePublic.from('users').select('*').eq('id', userId).maybeSingle(),
+        )
         if (byId) return byId
       }
     }
