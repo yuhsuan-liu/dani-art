@@ -1,5 +1,7 @@
 import { formatPrice } from '../../lib/utils'
+import { isDemoRecord } from '../../data/mockRegistry'
 import type { Artwork } from '../../types'
+import { DemoBadge, demoRowClass } from '../common/DemoBadge'
 import { ArtThumb } from './ArtListView'
 
 type Props = {
@@ -37,11 +39,17 @@ export function ArtManagementTable({
             </tr>
           )}
           {artwork.map((item) => (
-            <tr key={item.id} className="border-b border-stone-100 last:border-0">
+            <tr
+              key={item.id}
+              className={`border-b border-stone-100 last:border-0 ${demoRowClass(item)}`}
+            >
               <td className="px-4 py-3">
                 <ArtThumb artwork={item} />
               </td>
-              <td className="px-4 py-3 font-medium text-stone-900">{item.title}</td>
+              <td className="px-4 py-3 font-medium text-stone-900">
+                {item.title}
+                {isDemoRecord(item) && <DemoBadge className="ml-2 align-middle" />}
+              </td>
               <td className="px-4 py-3 text-stone-600">{formatPrice(item.price)}</td>
               <td className="px-4 py-3 text-stone-600">
                 {furnitureNameByArtId[item.id] ?? (

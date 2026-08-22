@@ -1,5 +1,7 @@
 import { formatPrice } from '../../lib/utils'
+import { isDemoRecord } from '../../data/mockRegistry'
 import type { Artwork } from '../../types'
+import { DemoBadge, demoRowClass } from '../common/DemoBadge'
 
 type Props = {
   artwork: Artwork[]
@@ -23,13 +25,16 @@ export function ArtListView({ artwork, furnitureNameByArtId, onSelect }: Props) 
           {artwork.map((item) => (
             <tr
               key={item.id}
-              className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-stone-50"
+              className={`cursor-pointer border-b border-stone-100 last:border-0 hover:bg-stone-50 ${demoRowClass(item)}`}
               onClick={() => onSelect(item)}
             >
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
                   <ArtThumb artwork={item} />
-                  <span className="font-medium text-stone-900">{item.title}</span>
+                  <span className="font-medium text-stone-900">
+                    {item.title}
+                    {isDemoRecord(item) && <DemoBadge className="ml-2 align-middle" />}
+                  </span>
                 </div>
               </td>
               <td className="px-4 py-3 text-stone-600">{formatPrice(item.price)}</td>

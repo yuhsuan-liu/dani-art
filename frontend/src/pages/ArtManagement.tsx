@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArtForm } from '../components/art/ArtForm'
 import { ArtManagementTable } from '../components/art/ArtManagementTable'
+import { DemoDataBanner } from '../components/common/DemoBadge'
+import { isDemoRecord } from '../data/mockRegistry'
 import {
   createArtwork,
   deleteArtwork,
@@ -8,6 +10,7 @@ import {
   updateArtwork,
   type ArtworkDraft,
 } from '../lib/artwork'
+import { clearAllDemoData } from '../lib/demo'
 import { getFurnitureByArtist } from '../lib/rooms'
 import type { Artwork, Furniture } from '../types'
 
@@ -87,7 +90,7 @@ export function ArtManagement() {
           <button
             type="button"
             onClick={() => setMode('create')}
-            className="rounded-lg bg-stone-900 px-4 py-2 text-sm text-white"
+            className="btn-a"
           >
             Upload artwork
           </button>
@@ -99,6 +102,20 @@ export function ArtManagement() {
 
       {!loading && !error && mode === 'list' && (
         <div className="mt-8">
+          <DemoDataBanner
+            hasDemo={artwork.some(isDemoRecord)}
+            onClearDemo={async () => {
+              if (
+                !window.confirm(
+                  'Remove all demo data? Your real uploads stay.',
+                )
+              ) {
+                return
+              }
+              await clearAllDemoData()
+              await refresh()
+            }}
+          />
           <ArtManagementTable
             artwork={artwork}
             furnitureNameByArtId={furnitureNameByArtId}

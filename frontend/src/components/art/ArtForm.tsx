@@ -85,7 +85,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
         <input
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          className="input-box mt-1"
         />
       </label>
       <label className="block text-sm">
@@ -96,7 +96,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
           step="1"
           value={price}
           onChange={(event) => setPrice(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          className="input-box mt-1"
         />
       </label>
       <label className="block text-sm">
@@ -104,7 +104,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
         <input
           value={medium}
           onChange={(event) => setMedium(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          className="input-box mt-1"
         />
       </label>
       <label className="block text-sm">
@@ -112,7 +112,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
         <input
           value={dimensions}
           onChange={(event) => setDimensions(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          className="input-box mt-1"
         />
       </label>
       <label className="block text-sm">
@@ -121,7 +121,7 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={3}
-          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          className="input-box mt-1"
         />
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -129,14 +129,14 @@ export function ArtForm({ artistId, initial, submitLabel, onSubmit, onCancel }: 
         <button
           type="submit"
           disabled={saving}
-          className="rounded-lg bg-stone-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="btn-a"
         >
           {saving ? 'Saving…' : submitLabel}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg border border-stone-300 px-4 py-2 text-sm"
+          className="btn-b"
         >
           Cancel
         </button>
